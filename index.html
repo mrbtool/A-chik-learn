@@ -862,7 +862,11 @@
                     </div>
                 </div>
                 
-                <div class="drawer-footer">Version 2.5<br>Made with <i class="fas fa-heart" style="color:red"></i> for A·chik</div>
+                <!-- MODIFIED FOOTER TO SHOW DYNAMIC VERSION -->
+                <div class="drawer-footer">
+                    <span id="appVersionDisplay">Version ...</span><br>
+                    Made with <i class="fas fa-heart" style="color:red"></i> for A·chik
+                </div>
             </div>
         </div>
 
@@ -884,6 +888,21 @@
 
         <!-- MAIN -->
         <main class="main-content">
+            
+            <!-- AD BANNER CONTAINER -->
+            <div style="width: 100%; display: flex; justify-content: center; margin-bottom: 15px; min-height: 50px;">
+                <script type="text/javascript">
+                    atOptions = {
+                        'key' : 'c1d577c74875916be469e70c0be2a659',
+                        'format' : 'iframe',
+                        'height' : 50,
+                        'width' : 320,
+                        'params' : {}
+                    };
+                </script>
+                <script type="text/javascript" src="https://summonteacherjunction.com/c1d577c74875916be469e70c0be2a659/invoke.js"></script>
+            </div>
+
             <!-- HOME -->
             <div id="home-view" class="view-section active">
                 <div class="search-container">
@@ -1630,6 +1649,30 @@
 
     <!-- FIREBASE MODULE TYPE SCRIPT -->
     <script type="module">
+        // =========================================================
+        // IMPORTANT: UPDATE THIS VERSION NUMBER WHEN UPDATING SW.JS
+        // =========================================================
+        const APP_VERSION = '2.5'; 
+
+        // --- VERSION CHECK & STORAGE RESET LOGIC ---
+        (function checkAppVersion() {
+            const storedVersion = localStorage.getItem('app_cur_version');
+            if (storedVersion !== APP_VERSION) {
+                console.log(`New version detected: ${APP_VERSION} (Old: ${storedVersion}). Clearing storage.`);
+                
+                // Clear Local Storage (Forces fresh data load)
+                localStorage.clear();
+                // Clear Session Storage (Reset session states)
+                sessionStorage.clear();
+                
+                // Update to new version
+                localStorage.setItem('app_cur_version', APP_VERSION);
+            }
+            // Update Drawer UI
+            const verDisplay = document.getElementById('appVersionDisplay');
+            if(verDisplay) verDisplay.innerText = "Version " + APP_VERSION;
+        })();
+        
         // IMPORT FIREBASE CONFIG AND AUTH FROM NEW FILE
         import { app, db, auth } from "./auth.js";
         import { getFirestore, collection, getDocs, doc, setDoc, getDoc, updateDoc, increment, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
