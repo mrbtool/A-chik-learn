@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FAQ | A·chik Learn</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { --primary: #2563EB; --bg: #F3F4F6; --surface: #FFFFFF; --text: #1F2937; --text-sub: #6B7280; --border: #E5E7EB; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); margin: 0; color: var(--text); }
+        
+        .app-header { background: var(--surface); padding: 15px 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); display: flex; align-items: center; gap: 15px; position: sticky; top: 0; }
+        .back-btn { background: none; border: none; font-size: 1.2rem; color: var(--text); cursor: pointer; }
+        .page-title { font-weight: 700; font-size: 1.2rem; color: var(--primary); }
+        
+        .container { max-width: 800px; margin: 20px auto; padding: 0 20px; }
+        
+        details { background: var(--surface); border-radius: 12px; margin-bottom: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.03); overflow: hidden; }
+        summary { padding: 20px; font-weight: 600; cursor: pointer; list-style: none; display: flex; justify-content: space-between; align-items: center; }
+        summary::after { content: '\f078'; font-family: 'Font Awesome 6 Free'; font-weight: 900; color: var(--text-sub); transition: transform 0.2s; }
+        details[open] summary::after { transform: rotate(180deg); }
+        .faq-body { padding: 0 20px 20px 20px; color: var(--text-sub); line-height: 1.6; border-top: 1px solid var(--bg); margin-top: -5px; padding-top: 15px; }
+    </style>
+</head>
+<body>
+    <header class="app-header">
+        <button class="back-btn" onclick="window.location.href='index.html'"><i class="fas fa-arrow-left"></i></button>
+        <div class="page-title">FAQ</div>
+    </header>
+
+    <div class="container">
+        <h2 style="text-align:center; margin: 25px 0; color:var(--text);">Frequently Asked Questions</h2>
+
+        <details>
+            <summary>Is A·chik Learn free to use?</summary>
+            <div class="faq-body">Yes! The core dictionary and learning features are completely free to use to help preserve and teach the Garo language.</div>
+        </details>
+
+        <details>
+            <summary>Does the app work offline?</summary>
+            <div class="faq-body">The app requires an internet connection to sync your progress, ranks, and fetch the latest dictionary updates. However, some cached data may be available offline.</div>
+        </details>
+
+        <details>
+            <summary>How are Ranks calculated?</summary>
+            <div class="faq-body">You earn points by playing the Daily Quiz and Time Lab games. As you accumulate points, you automatically level up from Bronze to Legend tiers.</div>
+        </details>
+
+        <details>
+            <summary>Can I contribute new words?</summary>
+            <div class="faq-body">We love community contributions! Please contact our support team via the About page to suggest new words or corrections.</div>
+        </details>
+
+        <details>
+            <summary>How do I reset my password?</summary>
+            <div class="faq-body">On the login screen, click "Forgot Password?", enter your email address, and we will send you a link to reset your password.</div>
+        </details>
+    </div>
+</body>
+</html>

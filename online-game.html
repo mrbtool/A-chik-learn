@@ -1,0 +1,514 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>A·chik Learn | Online Battle</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --primary: #2563EB;
+            --bg-color: #0f172a; 
+            --surface: #1e293b;
+            --text-main: #FFFFFF;
+            --text-sub: #94a3b8;
+            --danger: #EF4444;
+            --success: #10B981;
+            --gold: #F59E0B;
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { font-family: 'Inter', sans-serif; background-color: var(--bg-color); margin: 0; padding: 0; color: var(--text-main); height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+
+        .hidden { display: none !important; }
+        .fade-in { animation: fadeIn 0.5s ease forwards; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        #screen-container { flex: 1; position: relative; display: flex; align-items: center; justify-content: center; width: 100%; }
+        .screen { position: absolute; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; transition: 0.3s; }
+
+        /* LOBBY */
+        .lobby-card { background: var(--surface); width: 100%; max-width: 340px; border-radius: 24px; padding: 30px; text-align: center; border: 1px solid rgba(255,255,255,0.05); }
+        .mode-icon { width: 80px; height: 80px; background: linear-gradient(135deg, #3b82f6, #8b5cf6); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; font-size: 2rem; }
+        .play-btn { width: 100%; padding: 16px; background: linear-gradient(90deg, var(--primary), #8b5cf6); border: none; border-radius: 14px; color: white; font-size: 1.1rem; font-weight: 700; margin-top: 25px; cursor: pointer; transition: transform 0.2s; }
+        .play-btn:active { transform: scale(0.96); }
+        .play-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .exit-link { display: inline-block; margin-top: 15px; color: var(--text-sub); text-decoration: none; font-size: 0.9rem; cursor: pointer; }
+
+        /* MATCHMAKING */
+        .match-container { display: flex; align-items: center; justify-content: space-between; width: 100%; max-width: 320px; position: relative; margin-bottom: 50px; }
+        .avatar-box { display: flex; flex-direction: column; align-items: center; position: relative; z-index: 2; }
+        .avatar { width: 90px; height: 90px; border-radius: 50%; border: 4px solid var(--surface); background: #334155; display: flex; align-items: center; justify-content: center; font-size: 2rem; overflow: hidden; box-shadow: 0 8px 20px rgba(0,0,0,0.3); }
+        .player-name { margin-top: 10px; font-weight: 600; font-size: 0.9rem; }
+        
+        .radar-waves { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 100px; height: 100px; border-radius: 50%; background: rgba(37, 99, 235, 0.3); z-index: 1; opacity: 0; animation: ripple 2s infinite linear; }
+        @keyframes ripple { 0% { width: 90px; height: 90px; opacity: 0.8; } 100% { width: 250px; height: 250px; opacity: 0; } }
+
+        .vs-badge { position: absolute; left: 50%; top: 35px; transform: translateX(-50%); width: 50px; height: 50px; background: var(--danger); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 900; font-style: italic; border: 3px solid var(--bg-color); z-index: 5; }
+
+        /* GAMEPLAY */
+        .game-top-bar { width: 100%; max-width: 400px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; padding: 0 10px; }
+        .score-pill { background: rgba(255,255,255,0.1); padding: 5px 15px; border-radius: 15px; font-size: 0.9rem; transition: transform 0.2s; }
+        .timer-track { width: 100%; max-width: 400px; height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; margin-bottom: 30px; overflow: hidden; }
+        .timer-fill { height: 100%; background: linear-gradient(90deg, #F59E0B, #EF4444); width: 100%; transition: width 0.1s linear; }
+        .question-card { background: var(--surface); width: 100%; max-width: 400px; padding: 30px; border-radius: 20px; text-align: center; margin-bottom: 25px; min-height: 150px; display: flex; align-items: center; justify-content: center; }
+        .question-text { font-size: 1.5rem; font-weight: 700; margin: 0; }
+        .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; width: 100%; max-width: 400px; }
+        .opt-btn { background: rgba(255,255,255,0.05); border: 2px solid rgba(255,255,255,0.1); padding: 20px 10px; border-radius: 16px; color: white; font-size: 1rem; font-weight: 600; cursor: pointer; height: 80px; }
+        .opt-btn.correct { background: rgba(16, 185, 129, 0.2); border-color: #10B981; color: #10B981; }
+        .opt-btn.wrong { background: rgba(239, 68, 68, 0.2); border-color: var(--danger); color: var(--danger); }
+
+        /* RESULT */
+        .result-modal { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.95); z-index: 50; display: none; flex-direction: column; align-items: center; justify-content: center; backdrop-filter: blur(10px); }
+        .result-modal.open { display: flex; }
+        .result-card { background: var(--surface); width: 85%; max-width: 320px; border-radius: 24px; padding: 40px 20px; text-align: center; border: 1px solid rgba(255,255,255,0.1); animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        @keyframes popIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        
+        .result-icon { font-size: 4rem; margin-bottom: 15px; display: inline-block; }
+        .win-text { color: var(--gold); }
+        .lose-text { color: var(--danger); }
+        .draw-text { color: var(--text-main); }
+        
+        .result-score-box { background: rgba(0,0,0,0.2); padding: 15px; border-radius: 12px; margin: 20px 0; }
+        .score-row { display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 1.1rem; }
+
+        /* ALERT MODAL */
+        .custom-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 100; display: none; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
+        .custom-modal.open { display: flex; }
+        .modal-card { background: var(--surface); padding: 30px; border-radius: 20px; text-align: center; max-width: 300px; width: 90%; }
+        .modal-btn { background: var(--primary); color: white; border: none; padding: 10px 20px; border-radius: 10px; margin-top: 15px; cursor: pointer; width: 100%; }
+
+    </style>
+</head>
+<body>
+
+    <div id="screen-container">
+        
+        <!-- SCREEN 1: LOBBY -->
+        <div id="lobby-screen" class="screen">
+            <div class="lobby-card fade-in">
+                <div class="mode-icon"><i class="fas fa-globe-asia" style="color:white"></i></div>
+                <h2 style="margin:0 0 10px 0; font-size:1.5rem;">Online Battle</h2>
+                <p style="color:var(--text-sub); margin:0 0 20px 0; line-height:1.5;">
+                    multiplayer PvP.
+                </p>
+                <button id="findMatchBtn" class="play-btn" onclick="window.findMatch()" disabled>Loading...</button>
+                <div class="exit-link" onclick="window.goHome()">Back to Home</div>
+            </div>
+        </div>
+
+        <!-- SCREEN 2: WAITING / MATCHMAKING -->
+        <div id="match-screen" class="screen hidden">
+            <div class="match-container">
+                <div class="avatar-box">
+                    <div class="radar-waves"></div>
+                    <div class="avatar"><i class="fas fa-user"></i></div>
+                    <div class="player-name">You</div>
+                </div>
+                <div class="vs-badge">VS</div>
+                <div class="avatar-box">
+                    <div class="avatar" style="border-style: dashed; border-color: #64748b;" id="oppAvatar">
+                        <i class="fas fa-question"></i>
+                    </div>
+                    <div class="player-name" id="oppName">Searching...</div>
+                </div>
+            </div>
+            <div class="search-status">
+                <h3 id="statusText">Looking for opponent...</h3>
+                <button onclick="window.cancelMatch()" style="background:none; border:none; color:var(--danger); font-weight:600; cursor:pointer; margin-top:10px;">Cancel</button>
+            </div>
+        </div>
+
+        <!-- SCREEN 3: GAMEPLAY -->
+        <div id="game-screen" class="screen hidden">
+            <div class="game-top-bar">
+                <div class="score-pill" style="border:1px solid var(--primary); background: rgba(37,99,235,0.2);">You: <span id="myScore">0</span></div>
+                <div class="score-pill" style="border:1px solid var(--danger); background: rgba(239,68,68,0.2);">Opp: <span id="oppScore">0</span></div>
+            </div>
+            <div class="timer-track"><div class="timer-fill" id="timerBar"></div></div>
+            <div class="question-card"><div class="question-text" id="qText">Loading...</div></div>
+            <div class="options-grid" id="optionsContainer"></div>
+        </div>
+
+    </div>
+
+    <!-- GAME RESULT MODAL -->
+    <div id="resultOverlay" class="result-modal">
+        <div class="result-card">
+            <div class="result-icon" id="resultIcon"></div>
+            <h2 style="margin:0; text-transform:uppercase;" id="resultTitle">GAME OVER</h2>
+            <div class="result-score-box">
+                <div class="score-row">
+                    <span>You</span>
+                    <span id="finalMyScore">0</span>
+                </div>
+                <div class="score-row" style="color:var(--text-sub)">
+                    <span id="finalOppName">Opponent</span>
+                    <span id="finalOppScore">0</span>
+                </div>
+            </div>
+            <button class="play-btn" style="margin-top:0;" onclick="window.goHome()">Return Home</button>
+        </div>
+    </div>
+
+    <!-- ERROR ALERT MODAL -->
+    <div id="customModal" class="custom-modal">
+        <div class="modal-card">
+            <div class="modal-title" id="modalTitle">Title</div>
+            <div style="color:#94a3b8; font-size:0.9rem;" id="modalMsg">Message</div>
+            <button class="modal-btn" onclick="window.closeModal()">OK</button>
+        </div>
+    </div>
+
+    <!-- FIREBASE LOGIC -->
+    <script type="module">
+        import { db, auth } from "./auth.js";
+        import { 
+            collection, query, where, getDocs, addDoc, updateDoc, doc, onSnapshot, deleteDoc, getDoc, serverTimestamp 
+        } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        // --- GLOBAL VARIABLES ---
+        window.fullDictionary = [];
+        window.gameQuestions = [];
+        
+        let matchId = null;
+        let matchListener = null;
+        let searchTimeout = null;
+        let myRole = null; // 'player1' or 'player2'
+        let oppRole = null;
+        
+        let currentQIndex = 0;
+        let myScore = 0;
+        let oppScore = 0;
+        let timeLeft = 60;
+        let timerInterval;
+
+        // --- 1. INITIALIZATION ---
+        async function init() {
+            try {
+                // Fetch dictionary for question generation
+                const snap = await getDocs(collection(db, "words"));
+                snap.forEach(d => {
+                    const w = d.data();
+                    if(w.eng && w.garo) window.fullDictionary.push(w);
+                });
+                
+                const btn = document.getElementById('findMatchBtn');
+                if(window.fullDictionary.length >= 4) {
+                    btn.disabled = false;
+                    btn.innerText = "Find Match";
+                } else {
+                    btn.innerText = "Not Enough Data";
+                }
+            } catch(e) {
+                console.error(e);
+                document.getElementById('findMatchBtn').innerText = "Data Error";
+            }
+        }
+        init();
+
+        // --- 2. MATCHMAKING SYSTEM ---
+        
+        window.findMatch = async () => {
+            if(!auth.currentUser) {
+                window.showModal("Login Required", "Please log in to play online.");
+                return;
+            }
+
+            window.switchScreen('match-screen');
+            document.getElementById('statusText').innerText = "Searching for players...";
+            document.getElementById('oppName').innerText = "Searching...";
+            document.getElementById('oppAvatar').style.borderStyle = "dashed";
+            document.getElementById('oppAvatar').innerHTML = '<i class="fas fa-question"></i>';
+
+            try {
+                // Step A: Look for waiting matches
+                const q = query(collection(db, "matches"), where("status", "==", "waiting"));
+                const snapshot = await getDocs(q);
+
+                if(!snapshot.empty) {
+                    // --- JOIN EXISTING MATCH ---
+                    const matchDoc = snapshot.docs[0];
+                    matchId = matchDoc.id;
+                    myRole = 'player2';
+                    oppRole = 'player1';
+                    
+                    // Update DB saying I joined
+                    await updateDoc(doc(db, "matches", matchId), {
+                        player2: {
+                            uid: auth.currentUser.uid,
+                            name: auth.currentUser.displayName || "Guest",
+                            score: 0
+                        },
+                        status: 'active'
+                    });
+                    
+                    console.log("Joined match as Player 2");
+                    window.listenToMatch(matchId);
+
+                } else {
+                    // --- CREATE NEW MATCH ---
+                    myRole = 'player1';
+                    oppRole = 'player2';
+                    
+                    // Generate 10 random questions
+                    const questions = [];
+                    for(let i=0; i<10; i++) {
+                        const randIndex = Math.floor(Math.random() * window.fullDictionary.length);
+                        questions.push(window.fullDictionary[randIndex]);
+                    }
+
+                    const docRef = await addDoc(collection(db, "matches"), {
+                        status: 'waiting',
+                        createdAt: serverTimestamp(),
+                        questions: questions,
+                        player1: {
+                            uid: auth.currentUser.uid,
+                            name: auth.currentUser.displayName || "Host",
+                            score: 0
+                        },
+                        player2: null // Empty slot
+                    });
+                    
+                    matchId = docRef.id;
+                    console.log("Created match as Player 1");
+                    window.listenToMatch(matchId);
+
+                    // Timeout if nobody joins
+                    searchTimeout = setTimeout(() => {
+                        window.handleMatchNotFound();
+                    }, 30000); // 30s timeout
+                }
+
+            } catch(e) {
+                console.error(e);
+                window.showModal("Connection Error", "Could not connect to server.");
+                window.cancelMatch();
+            }
+        };
+
+        // --- 3. REAL-TIME LISTENER ---
+        window.listenToMatch = (id) => {
+            matchListener = onSnapshot(doc(db, "matches", id), (docSnap) => {
+                if(!docSnap.exists()) {
+                    // Match deleted
+                    if(myRole === 'player2') {
+                        window.showModal("Disconnected", "The match was cancelled.");
+                        window.cancelMatch();
+                    }
+                    return;
+                }
+
+                const data = docSnap.data();
+
+                // 3a. GAME START LOGIC
+                if(data.status === 'active') {
+                    if(searchTimeout) clearTimeout(searchTimeout);
+                    
+                    // Only run this ONCE when transitioning from waiting -> active
+                    if(document.getElementById('match-screen').classList.contains('hidden') === false) {
+                        window.gameQuestions = data.questions;
+                        
+                        // Show Opponent Details
+                        const oppData = data[oppRole];
+                        document.getElementById('oppName').innerText = oppData ? oppData.name : "Opponent";
+                        document.getElementById('statusText').innerText = "Match Found!";
+                        document.getElementById('oppAvatar').style.borderStyle = "solid";
+                        document.getElementById('oppAvatar').style.borderColor = "#10B981";
+                        document.getElementById('oppAvatar').innerHTML = `<i class="fas fa-user"></i>`;
+
+                        // Delay start by 2s
+                        setTimeout(() => { window.startGame(); }, 2000);
+                    }
+                }
+
+                // 3b. LIVE SCORE SYNC LOGIC
+                if(document.getElementById('game-screen').classList.contains('hidden') === false) {
+                    if(data[oppRole]) {
+                        oppScore = data[oppRole].score;
+                        const oppPill = document.getElementById('oppScore');
+                        oppPill.innerText = oppScore;
+                        
+                        // Small animation effect
+                        oppPill.parentElement.style.transform = "scale(1.1)";
+                        setTimeout(()=> oppPill.parentElement.style.transform = "scale(1)", 200);
+                    }
+                }
+            });
+        };
+
+        // --- 4. GAMEPLAY LOGIC ---
+        window.startGame = () => {
+            currentQIndex = 0;
+            myScore = 0;
+            oppScore = 0;
+            timeLeft = 60;
+            
+            document.getElementById('myScore').innerText = "0";
+            document.getElementById('oppScore').innerText = "0";
+            
+            window.switchScreen('game-screen');
+            window.renderQuestion();
+            
+            // Start Timer
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                document.getElementById('timerBar').style.width = (timeLeft/60*100) + "%";
+                if(timeLeft <= 0) window.endGame();
+            }, 1000);
+        };
+
+        window.renderQuestion = () => {
+            if(currentQIndex >= window.gameQuestions.length) {
+                // No more questions, just wait for timer
+                document.getElementById('qText').innerText = "Waiting for time...";
+                document.getElementById('optionsContainer').innerHTML = "";
+                return;
+            }
+
+            const q = window.gameQuestions[currentQIndex];
+            document.getElementById('qText').innerText = q.eng;
+
+            // Generate options locally
+            let options = [q.garo];
+            while(options.length < 4) {
+                const rand = window.fullDictionary[Math.floor(Math.random() * window.fullDictionary.length)].garo;
+                if(!options.includes(rand)) options.push(rand);
+            }
+            options.sort(() => Math.random() - 0.5);
+
+            const container = document.getElementById('optionsContainer');
+            container.innerHTML = "";
+            options.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = 'opt-btn';
+                btn.innerText = opt;
+                btn.onclick = () => window.handleAnswer(btn, opt, q.garo);
+                container.appendChild(btn);
+            });
+        };
+
+        window.handleAnswer = async (btn, selected, correct) => {
+            const btns = document.querySelectorAll('.opt-btn');
+            btns.forEach(b => b.disabled = true);
+
+            if(selected === correct) {
+                btn.classList.add('correct');
+                myScore += 10;
+                document.getElementById('myScore').innerText = myScore;
+
+                // --- CRITICAL: SYNC SCORE TO DB ---
+                try {
+                    await updateDoc(doc(db, "matches", matchId), {
+                        [`${myRole}.score`]: myScore
+                    });
+                } catch(err) {
+                    console.error("Score sync failed", err);
+                }
+
+            } else {
+                btn.classList.add('wrong');
+                btns.forEach(b => {
+                    if(b.innerText === correct) b.classList.add('correct');
+                });
+            }
+
+            currentQIndex++;
+            setTimeout(() => {
+                window.renderQuestion();
+            }, 1000);
+        };
+
+        window.endGame = () => {
+            clearInterval(timerInterval);
+            
+            // Show Result Overlay
+            const overlay = document.getElementById('resultOverlay');
+            const icon = document.getElementById('resultIcon');
+            const title = document.getElementById('resultTitle');
+            const myScoreEl = document.getElementById('finalMyScore');
+            const oppScoreEl = document.getElementById('finalOppScore');
+            const oppNameEl = document.getElementById('finalOppName');
+
+            myScoreEl.innerText = myScore;
+            oppScoreEl.innerText = oppScore;
+            oppNameEl.innerText = document.getElementById('oppName').innerText;
+
+            overlay.classList.add('open');
+
+            if(myScore > oppScore) {
+                icon.innerHTML = '<i class="fas fa-trophy win-text"></i>';
+                title.innerText = "YOU WON!";
+                title.style.color = "#F59E0B";
+            } else if (myScore < oppScore) {
+                icon.innerHTML = '<i class="fas fa-times-circle lose-text"></i>';
+                title.innerText = "YOU LOST";
+                title.style.color = "#EF4444";
+            } else {
+                icon.innerHTML = '<i class="fas fa-handshake draw-text"></i>';
+                title.innerText = "DRAW";
+                title.style.color = "#FFF";
+            }
+
+            // Clean up DB listeners
+            if(matchListener) matchListener();
+            matchId = null;
+        };
+
+        // --- UTILS & HELPERS ---
+        window.handleMatchNotFound = async () => {
+            if(matchId && myRole === 'player1') {
+                await deleteDoc(doc(db, "matches", matchId));
+            }
+            window.showModal("No Opponent", "We couldn't find a player nearby. Try again later.");
+            window.cancelMatch();
+        };
+
+        window.cancelMatch = async () => {
+            if(matchListener) matchListener(); 
+            if(searchTimeout) clearTimeout(searchTimeout);
+
+            // If I created it and am waiting, delete it
+            if(matchId && myRole === 'player1') {
+                try {
+                    const d = await getDoc(doc(db, "matches", matchId));
+                    if(d.exists() && d.data().status === 'waiting') {
+                        await deleteDoc(doc(db, "matches", matchId));
+                    }
+                } catch(e) {}
+            }
+
+            matchId = null;
+            window.switchScreen('lobby-screen');
+        };
+
+        window.switchScreen = (id) => {
+            document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
+            document.getElementById(id).classList.remove('hidden');
+            document.getElementById(id).classList.add('fade-in');
+        };
+
+        window.showModal = (title, msg) => {
+            document.getElementById('modalTitle').innerText = title;
+            document.getElementById('modalMsg').innerText = msg;
+            document.getElementById('customModal').classList.add('open');
+        };
+
+        window.closeModal = () => {
+            document.getElementById('customModal').classList.remove('open');
+        };
+
+        // --- UPDATED: GO HOME & SAVE POINTS ---
+        window.goHome = () => {
+            // Save points so Index.html can pick them up
+            if(myScore > 0) {
+                localStorage.setItem('pending_points_update', myScore);
+            }
+            window.location.href = "index.html";
+        };
+
+    </script>
+</body>
+</html>
