@@ -2,13 +2,13 @@
    RANK SYSTEM CONFIGURATION (UPDATED)
    ========================================== */
 const RANK_SYSTEM = [
-    { id: 'tier-bronze',   name: 'Bronze',   limit: 50,    desc: 'Beginner (0 - 49 pts)' },
-    { id: 'tier-silver',   name: 'Silver',   limit: 200,   desc: 'Learner (50 - 199 pts)' },
-    { id: 'tier-gold',     name: 'Gold',     limit: 500,   desc: 'Expert (200 - 499 pts)' },
-    { id: 'tier-platinum', name: 'Platinum', limit: 1000,  desc: 'Professional (500 - 999 pts)' },
-    { id: 'tier-diamond',  name: 'Diamond',  limit: 2500,  desc: 'Elite (1000 - 2499 pts)' },
-    { id: 'tier-master',   name: 'Master',   limit: 5000,  desc: 'Guru (2500 - 4999 pts)' },
-    { id: 'tier-legend',   name: 'Legend',   limit: 99999, desc: 'Godlike (5000+ pts)' }
+    { id: 'tier-bronze',   name: 'Bronze',   limit: 1000,    desc: 'Beginner (0 - 999 pts)' },
+    { id: 'tier-silver',   name: 'Silver',   limit: 2000,   desc: 'Learner (1000 - 1999 pts)' },
+    { id: 'tier-gold',     name: 'Gold',     limit: 3000,   desc: 'Expert (2000 - 2999 pts)' },
+    { id: 'tier-platinum', name: 'Platinum', limit: 4000,  desc: 'Professional (3000 - 3999 pts)' },
+    { id: 'tier-diamond',  name: 'Diamond',  limit: 5000,  desc: 'Elite (4000 - 4999 pts)' },
+    { id: 'tier-master',   name: 'Master',   limit: 6000,  desc: 'Guru (5000 - 5999 pts)' },
+    { id: 'tier-legend',   name: 'Legend',   limit: 99999, desc: 'Godlike (6000+ pts)' }
 ];
 
 window.renderRankScreen = (forcedScore = null) => {
