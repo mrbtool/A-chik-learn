@@ -864,7 +864,7 @@
                 
                 <!-- MODIFIED FOOTER TO SHOW DYNAMIC VERSION -->
                 <div class="drawer-footer">
-                    <span id="appVersionDisplay">Version ...</span><br>
+                    <span id="appVersionDisplay">Version 2.5</span><br>
                     Made with <i class="fas fa-heart" style="color:red"></i> for A·chik
                 </div>
             </div>
@@ -1647,8 +1647,8 @@
     <script src="rank-design.js"></script>
     <script src="rank.js"></script>
 
-    <!-- FIREBASE MODULE TYPE SCRIPT -->
-    <script type="module">
+    <!-- CRITICAL VERSION CONTROL SCRIPT (Independent of Modules) -->
+    <script>
         // =========================================================
         // IMPORTANT: UPDATE THIS VERSION NUMBER WHEN UPDATING SW.JS
         // =========================================================
@@ -1657,6 +1657,11 @@
         // --- VERSION CHECK & STORAGE RESET LOGIC ---
         (function checkAppVersion() {
             const storedVersion = localStorage.getItem('app_cur_version');
+            
+            // Update Drawer UI Immediately
+            const verDisplay = document.getElementById('appVersionDisplay');
+            if(verDisplay) verDisplay.innerText = "Version " + APP_VERSION;
+
             if (storedVersion !== APP_VERSION) {
                 console.log(`New version detected: ${APP_VERSION} (Old: ${storedVersion}). Clearing storage.`);
                 
@@ -1668,11 +1673,11 @@
                 // Update to new version
                 localStorage.setItem('app_cur_version', APP_VERSION);
             }
-            // Update Drawer UI
-            const verDisplay = document.getElementById('appVersionDisplay');
-            if(verDisplay) verDisplay.innerText = "Version " + APP_VERSION;
         })();
-        
+    </script>
+
+    <!-- FIREBASE MODULE TYPE SCRIPT -->
+    <script type="module">
         // IMPORT FIREBASE CONFIG AND AUTH FROM NEW FILE
         import { app, db, auth } from "./auth.js";
         import { getFirestore, collection, getDocs, doc, setDoc, getDoc, updateDoc, increment, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
