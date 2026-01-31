@@ -5,7 +5,11 @@ const CACHE_NAME = "achik-learn-v2.6";
 
 const ASSETS = [
   "./",
-  "./index.html",
+  "./index.html"
+  "leaderboard.js"
+  "rank-design.js"
+  "rank.js",
+
   "https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap",
   "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
 ];
