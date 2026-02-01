@@ -1,7 +1,7 @@
 // --- sw.js ---
 
 // 1. UPDATE VERSION HERE (Must match index.html version)
-const CACHE_NAME = "achik-learn-v1.0.4";
+const CACHE_NAME = "achik-learn-v1.0.5";
 
 const ASSETS = [
   "./",
