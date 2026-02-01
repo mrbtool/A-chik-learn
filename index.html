@@ -607,7 +607,6 @@
         function closeAppAlert() { document.getElementById('customAlertModal').classList.remove('open'); }
         
         // --- CLEAN URL SHARE LOGIC ---
-        // Generates a clean URL (removes index.html, #home, etc.) for sharing
         const cleanOrigin = window.location.origin + window.location.pathname.replace(/\/index\.html$/, '').replace(/\/$/, '');
         const APP_URL = cleanOrigin; 
         const SHARE_MSG = "Check out A·chik Learn! The best app to learn English-Garo vocabulary.";
@@ -709,16 +708,43 @@
 
     <!-- FIREBASE MODULE TYPE SCRIPT -->
     <script type="module">
-        // SYNC VERSION
+        // =========================================================
+        // RESTORED: AUTOMATIC VERSION SYNC & UPDATE LOGIC
+        // =========================================================
         async function syncAppVersion() {
             try {
                 const response = await fetch('./sw.js?nocache=' + Date.now());
                 const text = await response.text();
                 let version = 'Online';
                 const vMatch = text.match(/VERSION\s*=\s*['"]([\d\.]+)['"]/);
+                const cMatch = text.match(/['"].*v([\d\.]+).*['"]/);
                 if(vMatch) version = vMatch[1];
-                document.getElementById('appVersionDisplay').innerText = "Version " + version;
-            } catch (e) { console.warn("Ver Check Fail", e); }
+                else if(cMatch) version = cMatch[1];
+
+                const verDisplay = document.getElementById('appVersionDisplay');
+                if(verDisplay) verDisplay.innerText = "Version " + version;
+
+                const storedVersion = localStorage.getItem('app_cur_version');
+                if (storedVersion && storedVersion !== version && version !== 'Online') {
+                    console.log(`Update: ${version}`);
+                    localStorage.setItem('app_cur_version', version);
+                    if('caches' in window) {
+                        const keys = await caches.keys();
+                        await Promise.all(keys.map(key => caches.delete(key)));
+                    }
+                    if('serviceWorker' in navigator) {
+                        const regs = await navigator.serviceWorker.getRegistrations();
+                        for(let reg of regs) await reg.unregister();
+                    }
+                    window.location.reload();
+                } else if (!storedVersion && version !== 'Online') {
+                    localStorage.setItem('app_cur_version', version);
+                }
+            } catch (e) {
+                console.warn("Ver check fail", e);
+                const verDisplay = document.getElementById('appVersionDisplay');
+                if(verDisplay) verDisplay.innerText = "Version Online";
+            }
         }
         syncAppVersion();
 
