@@ -17,6 +17,7 @@
     <!-- Icons: FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
+    <!-- Styles -->
     <style>
         :root {
             --primary: #2563EB;
@@ -44,6 +45,18 @@
         .loader-status { margin-top: 15px; font-size: 0.8rem; color: var(--text-sub); font-weight: 500; font-family: monospace; min-height: 1.2em; }
         @keyframes pulseLogo { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(0.95); opacity: 0.8; } }
 
+        /* --- SKELETON ANIMATIONS --- */
+        @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+        .skeleton-anim { background: linear-gradient(90deg, #e5e7eb 25%, #d1d5db 50%, #e5e7eb 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite linear; border-radius: 8px; }
+        
+        /* Skeleton Specifics */
+        .sk-card { background: white; border-radius: 16px; padding: 16px; display: flex; align-items: center; margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
+        .sk-icon { width: 45px; height: 45px; border-radius: 12px; margin-right: 15px; flex-shrink: 0; }
+        .sk-content { flex: 1; }
+        .sk-line { height: 14px; margin-bottom: 8px; width: 60%; }
+        .sk-line.short { width: 40%; margin-bottom: 0; }
+        .sk-banner { width: 100%; height: 180px; border-radius: 16px; margin-bottom: 25px; }
+
         /* --- AUTH SCREEN --- */
         #auth-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--surface); z-index: 5000; overflow-y: auto; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; transition: 0.3s; }
         .auth-card { width: 100%; max-width: 400px; text-align: center; position: relative; }
@@ -70,7 +83,7 @@
         .header-icon-btn { background: none; border: none; font-size: 1.2rem; color: var(--text-main); cursor: pointer; padding: 5px; }
         .brand { font-weight: 700; font-size: 1.2rem; color: var(--primary); flex: 1; }
 
-        /* --- OFFLINE OVERLAY --- */
+        /* --- OFFLINE OVERLAY (BLOCKING) --- */
         #offline-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 255, 255, 0.98); z-index: 10000; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; opacity: 0; visibility: hidden; transition: all 0.3s ease; backdrop-filter: blur(5px); }
         #offline-overlay.active { opacity: 1; visibility: visible; }
         .offline-icon { font-size: 4rem; color: var(--text-sub); margin-bottom: 20px; background: #F3F4F6; width: 120px; height: 120px; border-radius: 50%; display: flex; align-items: center; justify-content: center; animation: pulseGray 2s infinite; }
@@ -79,6 +92,12 @@
         .retry-btn { background: var(--primary); color: white; padding: 12px 30px; border-radius: 50px; border: none; font-weight: 600; font-size: 1rem; cursor: pointer; box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3); transition: transform 0.2s; }
         .retry-btn:active { transform: scale(0.95); }
         @keyframes pulseGray { 0% { box-shadow: 0 0 0 0 rgba(107, 114, 128, 0.2); } 70% { box-shadow: 0 0 0 20px rgba(107, 114, 128, 0); } 100% { box-shadow: 0 0 0 0 rgba(107, 114, 128, 0); } }
+
+        /* --- OFFLINE TOAST (NON-BLOCKING) --- */
+        .offline-toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%) translateY(100px); background: #374151; color: white; padding: 12px 20px; border-radius: 50px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); z-index: 9000; display: flex; align-items: center; gap: 10px; font-size: 0.9rem; font-weight: 500; transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); opacity: 0; pointer-events: none; }
+        .offline-toast.show { transform: translateX(-50%) translateY(0); opacity: 1; pointer-events: auto; }
+        .offline-dot { width: 8px; height: 8px; background: #EF4444; border-radius: 50%; box-shadow: 0 0 5px #EF4444; }
+        .offline-toast.restored .offline-dot { background: #10B981; box-shadow: 0 0 5px #10B981; }
 
         /* --- MODERN DRAWER & ANIMATIONS --- */
         .drawer-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.3); backdrop-filter: blur(5px); z-index: 2000; opacity: 0; visibility: hidden; transition: opacity 0.4s ease, visibility 0.4s; }
@@ -296,7 +315,7 @@
     <!-- FAST LOAD SCRIPT: Hides loader instantly if data exists -->
     <script>if(sessionStorage.getItem('app_loaded_session')==='true'){document.getElementById('app-loader').style.display='none';}</script>
 
-    <!-- OFFLINE SCREEN -->
+    <!-- OFFLINE FULL SCREEN ALERT (BLOCKING - ONLY SHOWS IF NO DATA) -->
     <div id="offline-overlay">
         <div class="offline-icon">
             <i class="fas fa-wifi" style="position: relative;">
@@ -304,8 +323,15 @@
             </i>
         </div>
         <div class="offline-title">No Internet</div>
-        <div class="offline-desc">You are currently offline. Please check your internet connection and try again.</div>
-        <button class="retry-btn" onclick="window.location.reload()">Try Again</button>
+        <div class="offline-desc">Connection failed. Please check your internet and try again to load data.</div>
+        <button class="retry-btn" onclick="window.location.reload()">Retry Connection</button>
+    </div>
+
+    <!-- OFFLINE TOAST (NON-BLOCKING - SHOWS IF DATA IS CACHED) -->
+    <div id="offline-toast" class="offline-toast">
+        <div class="offline-dot"></div>
+        <i class="fas fa-wifi" style="margin-left: 5px;"></i> 
+        <span id="offline-msg">Offline Mode</span>
     </div>
 
     <!-- AUTHENTICATION VIEW (Hidden by default) -->
@@ -401,7 +427,7 @@
         <!-- MAIN -->
         <main class="main-content">
             <!-- AD BANNER -->
-            <div style="width: 100%; display: flex; justify-content: center; margin-bottom: 15px; min-height: 50px;">
+            <div id="adContainer" style="width: 100%; display: flex; justify-content: center; margin-bottom: 15px; min-height: 50px;">
                 <script type="text/javascript">
                     atOptions = { 'key' : 'c1d577c74875916be469e70c0be2a659', 'format' : 'iframe', 'height' : 50, 'width' : 320, 'params' : {} };
                 </script>
@@ -546,9 +572,66 @@
 
     <!-- INLINE SCRIPTS -->
     <script>
-        // Offline
-        function updateOnlineStatus() { const overlay = document.getElementById('offline-overlay'); if (navigator.onLine) overlay.classList.remove('active'); else overlay.classList.add('active'); }
-        window.addEventListener('online', updateOnlineStatus); window.addEventListener('offline', updateOnlineStatus); document.addEventListener('DOMContentLoaded', updateOnlineStatus);
+        // SMART ONLINE/OFFLINE CHECK
+        function updateOnlineStatus() { 
+            const overlay = document.getElementById('offline-overlay'); 
+            const toast = document.getElementById('offline-toast');
+            const toastMsg = document.getElementById('offline-msg');
+            const hasData = (window.dictionary && window.dictionary.length > 0);
+
+            if (navigator.onLine) {
+                // ONLINE RESTORED LOGIC
+                overlay.classList.remove('active');
+                
+                // Show "Restored" message temporarily
+                toast.classList.add('show');
+                toast.classList.add('restored');
+                toastMsg.innerText = "Internet Restored. Refreshing...";
+                toast.innerHTML = '<i class="fas fa-sync fa-spin" style="margin-right:8px"></i> Internet Restored. Refreshing...';
+
+                // AUTO REFRESH AFTER 3 SECONDS
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                    
+                    // Show Skeletons while loading
+                    renderSkeletons();
+                    
+                    // Trigger Data Load with forceRefresh = true
+                    if(window.loadData) window.loadData(true);
+
+                    // Try to fix Ad if broken
+                    const adContainer = document.getElementById('adContainer');
+                    if(adContainer && adContainer.innerHTML.includes('Webpage not available')) {
+                        // Reloading the specific iframe/script is hard without page reload, 
+                        // but re-injecting might help.
+                        // For now, loadData() refreshes content.
+                    }
+                }, 3000);
+
+            } else {
+                // OFFLINE
+                toast.classList.remove('restored');
+                toastMsg.innerText = "Offline Mode";
+                toast.innerHTML = '<div class="offline-dot"></div><i class="fas fa-wifi" style="margin-left: 5px;"></i> <span>Offline Mode</span>';
+
+                if(hasData) {
+                    overlay.classList.remove('active');
+                    toast.classList.add('show');
+                } else {
+                    overlay.classList.add('active');
+                    toast.classList.remove('show');
+                }
+            }
+        }
+        window.addEventListener('online', updateOnlineStatus); 
+        window.addEventListener('offline', updateOnlineStatus); 
+        document.addEventListener('DOMContentLoaded', () => {
+             // Initial check, don't trigger auto-refresh on load
+             const overlay = document.getElementById('offline-overlay'); 
+             if (!navigator.onLine && (!window.dictionary || window.dictionary.length === 0)) {
+                 overlay.classList.add('active');
+             }
+        });
 
         // Slider
         let currentSlide = 0; let slideInterval; let totalSlides = 0;
@@ -628,7 +711,17 @@
             if (document.getElementById('categorySheet').classList.contains('open')) { closeCatSheet(); return; }
             if (document.getElementById('drawerOverlay').classList.contains('open')) { closeDrawer(); return; }
             if (document.getElementById('activeGameInterface').classList.contains('active')) { window.exitGame(); return; }
-            if (!document.getElementById('home-view').classList.contains('active')) { const homeNav = document.querySelector('.nav-item[onclick*="home"]'); if(homeNav) homeNav.click(); }
+            
+            // --- FIX FOR BLANK HOME PAGE ---
+            if (!document.getElementById('home-view').classList.contains('active')) { 
+                const homeNav = document.querySelector('.nav-item[onclick*="home"]'); 
+                if(homeNav) {
+                    homeNav.click(); // Trigger switchTab logic
+                }
+            } else {
+                // If we are already on home view but pushed back, force render
+                if(window.renderCategories) window.renderCategories();
+            }
         };
 
         function openDrawer() { 
@@ -662,9 +755,23 @@
         function switchTab(t, el) {
             document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active')); document.getElementById(t+'-view').classList.add('active');
             document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active')); el.classList.add('active');
-            if (t !== 'home') pushHistoryState(t);
-            if(t === 'ranks') { if(window.renderRankScreen) window.renderRankScreen(); }
-            if(t === 'games') { window.exitGame(); }
+            
+            // --- FIX FOR HOME PAGE DATA ---
+            if (t === 'home') {
+                // Always try to render immediately
+                if(window.renderCategories) window.renderCategories();
+                if(window.renderSlider) window.renderSlider();
+                
+                // If the dictionary is empty (e.g. refresh lost state), reload data
+                if(!window.dictionary || window.dictionary.length === 0) {
+                    if(window.loadData) window.loadData(false);
+                }
+            } else {
+                pushHistoryState(t);
+            }
+
+            if (t === 'ranks') { if(window.renderRankScreen) window.renderRankScreen(); }
+            if (t === 'games') { window.exitGame(); }
         }
 
         window.openDynamicPage = (id) => { const item = window.drawerItems.find(x => x.id === id); if(item) { openInfoPage(item.title, item.content); closeDrawer(); } };
@@ -700,9 +807,45 @@
             document.getElementById('gameScore').innerText = gameScore; currentQuestionCount++;
             if(currentGameMode === 'daily' && currentQuestionCount >= 10) { setTimeout(endGame, 1000); } else { setTimeout(window.nextQuestion, 1000); }
         };
+
+        // --- SKELETON RENDERING ---
+        function renderSkeletons() {
+            // Slider Skeleton
+            document.getElementById('sliderWrapper').innerHTML = `<div class="sk-banner skeleton-anim"></div>`;
+            
+            // Category Skeletons
+            const catGrid = document.getElementById('categoryGrid');
+            catGrid.innerHTML = '';
+            for(let i=0; i<6; i++) {
+                catGrid.innerHTML += `
+                    <div class="sk-card">
+                        <div class="sk-icon skeleton-anim"></div>
+                        <div class="sk-content">
+                            <div class="sk-line skeleton-anim"></div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // Book Skeletons
+            const bookList = document.getElementById('bookList');
+            bookList.innerHTML = '';
+            for(let i=0; i<3; i++) {
+                bookList.innerHTML += `
+                    <div class="sk-card">
+                        <div class="sk-icon skeleton-anim" style="height:65px; width:50px;"></div>
+                        <div class="sk-content">
+                            <div class="sk-line skeleton-anim" style="width:80%"></div>
+                            <div class="sk-line short skeleton-anim"></div>
+                        </div>
+                    </div>
+                `;
+            }
+        }
     </script>
     
     <!-- External Scripts -->
+    <script src="dictionary.js"></script>
     <script src="rank-design.js"></script>
     <script src="rank.js"></script>
 
@@ -713,11 +856,15 @@
         // =========================================================
         async function syncAppVersion() {
             try {
-                const response = await fetch('./sw.js?nocache=' + Date.now());
+                // Fetch sw.js with timestamp to bypass browser cache
+                const response = await fetch('./sw.js?t=' + Date.now());
                 const text = await response.text();
                 let version = 'Online';
-                const vMatch = text.match(/VERSION\s*=\s*['"]([\d\.]+)['"]/);
+                
+                // Extract version string
+                const vMatch = text.match(/VERSION\s*=\s*['"](.+)['"]/);
                 const cMatch = text.match(/['"].*v([\d\.]+).*['"]/);
+                
                 if(vMatch) version = vMatch[1];
                 else if(cMatch) version = cMatch[1];
 
@@ -725,17 +872,27 @@
                 if(verDisplay) verDisplay.innerText = "Version " + version;
 
                 const storedVersion = localStorage.getItem('app_cur_version');
+                
+                // VERSION MISMATCH: Clear Cache and Reload
                 if (storedVersion && storedVersion !== version && version !== 'Online') {
-                    console.log(`Update: ${version}`);
+                    console.log(`Update found: ${version}. Clearing cache.`);
+                    
+                    // 1. Clear LocalStorage Data
+                    localStorage.removeItem('app_cached_data'); 
                     localStorage.setItem('app_cur_version', version);
+                    
+                    // 2. Clear Service Worker Caches
                     if('caches' in window) {
                         const keys = await caches.keys();
                         await Promise.all(keys.map(key => caches.delete(key)));
                     }
+                    
+                    // 3. Unregister SW to force update
                     if('serviceWorker' in navigator) {
                         const regs = await navigator.serviceWorker.getRegistrations();
                         for(let reg of regs) await reg.unregister();
                     }
+                    
                     window.location.reload();
                 } else if (!storedVersion && version !== 'Online') {
                     localStorage.setItem('app_cur_version', version);
@@ -759,7 +916,8 @@
         window.history.replaceState({ view: 'home' }, "Home", "#home");
 
         // GLOBAL VARS
-        window.dictionary = [];
+        // Initialize with local dictionary if available
+        window.dictionary = window.staticDictionary || []; 
         window.categories = [];
         window.books = [];
         window.drawerItems = [];
@@ -933,29 +1091,71 @@
 
         // --- DATA LOADING & RENDERING ---
         
-        async function loadData() {
+        async function loadData(isRefresh = false) {
             const loader = document.getElementById('app-loader');
             const bar = document.getElementById('loadingBarFill');
             const updateProgress = (pct) => { if(bar) bar.style.width = `${pct}%`; };
 
-            // STRICT CHECK: If already loaded, do NOT show loader again.
-            if(dataLoaded || sessionStorage.getItem('app_loaded_session') === 'true') {
-                loader.style.display = 'none';
-                // If dictionary is empty despite flag (rare edge case), continue loading silently
-                if(window.dictionary && window.dictionary.length > 0) return;
-            } else {
-                loader.style.display = 'flex';
+            // 1. FAST LOAD FROM LOCAL STORAGE (If not refreshing)
+            if(!isRefresh) {
+                const cached = localStorage.getItem('app_cached_data');
+                if(cached) {
+                    try {
+                        const parsed = JSON.parse(cached);
+                        if(parsed.dictionary && parsed.dictionary.length > 0) {
+                            window.dictionary = parsed.dictionary;
+                            window.categories = parsed.categories || [];
+                            window.books = parsed.books || [];
+                            window.drawerItems = parsed.drawerItems || [];
+                            window.banners = parsed.banners || [];
+                            
+                            dataLoaded = true;
+                            renderApp();
+                            loader.style.display = 'none';
+                            // Note: We still continue to fetch fresh data below to update cache
+                        }
+                    } catch(e) { console.warn("Cache parse error", e); }
+                }
+                
+                // If already loaded in session and not refreshing, stop here
+                if(dataLoaded || sessionStorage.getItem('app_loaded_session') === 'true') {
+                    if(window.dictionary && window.dictionary.length > 0) return;
+                }
+            }
+            
+            // Show Spinner if not refreshing (and no cache hit)
+            if(!isRefresh && !dataLoaded) {
+                 loader.style.display = 'flex';
             }
 
             try {
+                // If refreshing, reset arrays to avoid duplication
+                if(isRefresh) {
+                    window.categories = [];
+                    window.books = [];
+                    window.drawerItems = [];
+                    window.banners = [];
+                    // Keep existing dictionary momentarily to avoid flash, but prepare to overwrite
+                    // For safety, we can clear it or rely on overwrite logic
+                }
+
                 const catSnap = await getDocs(collection(db, "categories"));
-                window.categories = [];
-                catSnap.forEach(doc => window.categories.push({ id: doc.id, ...doc.data() }));
+                const tempCats = [];
+                catSnap.forEach(doc => tempCats.push({ id: doc.id, ...doc.data() }));
+                // Fallback
+                if(tempCats.length === 0 && window.dictionary.length > 0) {
+                    const uniqueCats = [...new Set(window.dictionary.map(item => item.cat))];
+                    tempCats.push(...uniqueCats.map(c => ({ name: c, icon: 'fa-tag' })));
+                }
+                window.categories = tempCats;
                 updateProgress(30);
 
                 const wordSnap = await getDocs(collection(db, "words"));
-                window.dictionary = [];
-                wordSnap.forEach(doc => window.dictionary.push({ id: doc.id, ...doc.data() }));
+                const tempDict = window.staticDictionary ? [...window.staticDictionary] : [];
+                if(!wordSnap.empty) {
+                     wordSnap.forEach(doc => tempDict.push({ id: doc.id, ...doc.data() }));
+                }
+                window.dictionary = tempDict;
                 updateProgress(60);
 
                 const bookSnap = await getDocs(collection(db, "books"));
@@ -972,8 +1172,23 @@
                 bannerSnap.forEach(doc => window.banners.push({ id: doc.id, ...doc.data() }));
                 updateProgress(100);
 
+                // SAVE TO LOCAL STORAGE
+                try {
+                    const cacheObj = {
+                        dictionary: window.dictionary,
+                        categories: window.categories,
+                        books: window.books,
+                        drawerItems: window.drawerItems,
+                        banners: window.banners
+                    };
+                    localStorage.setItem('app_cached_data', JSON.stringify(cacheObj));
+                } catch (e) {
+                    console.warn("Storage quota exceeded", e);
+                }
+
                 dataLoaded = true;
                 sessionStorage.setItem('app_loaded_session', 'true');
+                
                 renderApp();
                 renderDrawer();
 
@@ -981,8 +1196,12 @@
             } catch (e) {
                 console.error(e);
                 loader.style.display = 'none';
+                renderApp();
             }
         }
+        
+        // Expose function globally for the timer
+        window.loadData = loadData;
 
         function renderApp() {
             renderCategories();
