@@ -67,9 +67,23 @@
 
         /* --- APP STRUCTURE --- */
         #main-app-container { display: flex; flex-direction: column; height: 100vh; width: 100%; }
-        .app-header { background-color: var(--surface); padding: 15px 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); display: flex; align-items: center; gap: 15px; position: sticky; top: 0; z-index: 50; }
+        .app-header { background-color: var(--surface); padding: 15px 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); display: flex; align-items: center; gap: 15px; position: sticky; top: 0; z-index: 50; flex-shrink: 0; }
         .header-icon-btn { background: none; border: none; font-size: 1.2rem; color: var(--text-main); cursor: pointer; padding: 5px; }
         .brand { font-weight: 700; font-size: 1.2rem; color: var(--primary); flex: 1; }
+
+        /* --- FIXED AD CONTAINER --- */
+        .fixed-ad-container {
+            width: 100%;
+            background-color: var(--surface);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 5px 0;
+            border-bottom: 1px solid var(--border);
+            z-index: 40;
+            flex-shrink: 0; /* Prevents shrinking in flex layout */
+            min-height: 60px; /* Ensure space for ad */
+        }
 
         /* --- OFFLINE OVERLAY --- */
         #offline-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 255, 255, 0.98); z-index: 10000; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; opacity: 0; visibility: hidden; transition: all 0.3s ease; backdrop-filter: blur(5px); }
@@ -461,14 +475,14 @@
             <button class="header-icon-btn" onclick="window.openLeaderboard()"><i class="fas fa-trophy" style="color: #F59E0B;"></i></button>
         </header>
 
+        <!-- FIXED AD BANNER (Below Header, Non-scrollable) -->
+        <div class="fixed-ad-container">
+            <script type="text/javascript">atOptions={'key':'c1d577c74875916be469e70c0be2a659','format':'iframe','height':50,'width':320,'params':{}};</script>
+            <script type="text/javascript" src="https://summonteacherjunction.com/c1d577c74875916be469e70c0be2a659/invoke.js"></script>
+        </div>
+
         <!-- MAIN -->
         <main class="main-content">
-            <!-- AD BANNER -->
-            <div style="width: 100%; display: flex; justify-content: center; margin-bottom: 15px; min-height: 50px;">
-                <script type="text/javascript">atOptions={'key':'c1d577c74875916be469e70c0be2a659','format':'iframe','height':50,'width':320,'params':{}};</script>
-                <script type="text/javascript" src="https://summonteacherjunction.com/c1d577c74875916be469e70c0be2a659/invoke.js"></script>
-            </div>
-
             <!-- HOME -->
             <div id="home-view" class="view-section active">
                 <div class="search-container">
