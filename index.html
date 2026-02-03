@@ -120,6 +120,60 @@
         .search-input { width: 100%; padding: 14px 15px 14px 45px; border-radius: 12px; border: 1px solid var(--border); background: var(--surface); outline: none; font-size: 1rem; }
         .search-icon { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: var(--text-sub); }
         
+        /* NEW: SEARCH RESULTS & WORD CARD STYLES */
+        #searchList { display: flex; flex-direction: column; gap: 12px; padding-bottom: 20px; }
+        
+        .word-card {
+            background: var(--surface);
+            border-radius: 16px;
+            padding: 16px 20px;
+            border: 1px solid rgba(0,0,0,0.05);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            position: relative;
+            transition: transform 0.2s;
+            border-left: 5px solid var(--primary);
+            margin-bottom: 12px; /* Ensure spacing in lists */
+        }
+        
+        .word-card:active { transform: scale(0.98); }
+        
+        .w-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+        
+        .w-text { flex: 1; word-wrap: break-word; line-height: 1.3; }
+        
+        /* English Word (Top) */
+        .w-eng { 
+            font-size: 1.05rem; 
+            font-weight: 700; 
+            color: var(--text-main); 
+        }
+        
+        /* Garo Word (Bottom) */
+        .w-garo { 
+            font-size: 0.95rem; 
+            font-weight: 600; 
+            color: var(--primary); 
+        }
+        
+        /* Badges */
+        .w-badge {
+            font-size: 0.65rem; 
+            font-weight: 700; 
+            padding: 4px 8px; 
+            border-radius: 6px;
+            letter-spacing: 0.5px; 
+            flex-shrink: 0; 
+            text-transform: uppercase;
+        }
+        
+        .bg-eng { background: #ECFDF5; color: #047857; border: 1px solid #D1FAE5; } /* Green Badge */
+        .bg-garo { background: #F0F9FF; color: #0369A1; border: 1px solid #E0F2FE; } /* Blue/Teal Badge */
+        
+        .w-divider { height: 1px; background: #F3F4F6; width: 100%; }
+
         /* FIXED VERTICAL LIST CSS */
         #categoryGrid { display: flex !important; flex-direction: column !important; gap: 12px !important; width: 100% !important; margin-bottom: 25px !important; padding: 2px !important; background: transparent !important; box-shadow: none !important; border: none !important; overflow-x: hidden !important; grid-template-columns: none !important; }
         .cat-card { display: flex !important; flex-direction: row !important; align-items: center !important; justify-content: flex-start !important; width: 100% !important; box-sizing: border-box !important; background: #FFFFFF !important; padding: 16px 18px !important; border-radius: 16px !important; box-shadow: 0 2px 6px rgba(0,0,0,0.06) !important; border: 1px solid rgba(0,0,0,0.02) !important; cursor: pointer; transition: transform 0.2s; flex-shrink: 0; }
@@ -279,9 +333,6 @@
         .bottom-nav { position: fixed; bottom: 0; width: 100%; background: var(--surface); display: flex; justify-content: space-around; padding: 12px 0; border-top: 1px solid var(--border); z-index: 90; }
         .nav-item { display: flex; flex-direction: column; align-items: center; color: var(--text-sub); font-size: 0.75rem; gap: 5px; cursor: pointer; width: 25%; }
         .nav-item.active { color: var(--primary); }
-        .word-card { background: var(--surface); border-radius: 12px; padding: 16px; margin-bottom: 12px; border-left: 4px solid var(--primary); display: flex; justify-content: space-between; }
-        .word-eng { font-weight: 600; }
-        .word-garo { color: var(--text-sub); }
 
         /* AD SCREEN */
         #ad-interstitial { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #111827; z-index: 99999; display: none; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
@@ -652,7 +703,20 @@
 
             if (uniqueResults.length > 0) { 
                 let html = ""; 
-                uniqueResults.forEach(word => { html += `<div class="word-card"><span class="word-eng">${word.eng}</span><span class="word-garo">${word.garo}</span></div>`; }); 
+                uniqueResults.forEach(word => { 
+                    html += `
+                    <div class="word-card" onclick="void(0)">
+                        <div class="w-row">
+                            <span class="w-text w-eng">${word.eng}</span>
+                            <span class="w-badge bg-eng">ENG</span>
+                        </div>
+                        <div class="w-divider"></div>
+                        <div class="w-row">
+                            <span class="w-text w-garo">${word.garo}</span>
+                            <span class="w-badge bg-garo">GARO</span>
+                        </div>
+                    </div>`; 
+                }); 
                 resultList.innerHTML = html; 
             } else { resultList.innerHTML = `<div style='text-align:center; padding:20px; color:#aaa;'>No results found for "${input.value}"</div>`; }
         };
@@ -738,9 +802,27 @@
             document.getElementById('sheetTitle').innerText = name;
             const words = window.dictionary.filter(w => w.cat === name);
             let html = "";
-            if(words.length) words.forEach(w => html += `<div class="word-card"><span class="word-eng">${w.eng}</span><span class="word-garo">${w.garo}</span></div>`);
-            else html = "<p style='text-align:center; color:#888; margin-top:20px;'>No words found in this category.</p>";
-            document.getElementById('sheetContent').innerHTML = html; document.getElementById('categorySheet').classList.add('open'); pushHistoryState('category');
+            if(words.length) {
+                words.forEach(w => {
+                    html += `
+                    <div class="word-card" onclick="void(0)">
+                        <div class="w-row">
+                            <span class="w-text w-eng">${w.eng}</span>
+                            <span class="w-badge bg-eng">ENG</span>
+                        </div>
+                        <div class="w-divider"></div>
+                        <div class="w-row">
+                            <span class="w-text w-garo">${w.garo}</span>
+                            <span class="w-badge bg-garo">GARO</span>
+                        </div>
+                    </div>`;
+                });
+            } else {
+                html = "<p style='text-align:center; color:#888; margin-top:20px;'>No words found in this category.</p>";
+            }
+            document.getElementById('sheetContent').innerHTML = html; 
+            document.getElementById('categorySheet').classList.add('open'); 
+            pushHistoryState('category');
         };
 
         // --- GAME LOGIC ---
