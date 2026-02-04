@@ -2,18 +2,11 @@
   "name": "A·chik Learn",
   "short_name": "A·chik Learn",
   "description": "Learn A'chik (Garo) language easily with words, daily use phrases, quizzes, and fun activities.",
-
-  "start_url": "/index.html",
-  "scope": "/",
-
+  "start_url": "./index.html",
   "display": "standalone",
-  "orientation": "portrait",
-
   "background_color": "#F3F4F6",
   "theme_color": "#2563EB",
-
-  "version": "1.0.12",
-
+  "orientation": "portrait",
   "icons": [
     {
       "src": "https://raw.githubusercontent.com/mrbtool/A-chik-learn/refs/heads/main/achiklearn_logo.png",
