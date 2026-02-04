@@ -1,7 +1,7 @@
 // --- sw.js ---
 
 // 🔥 CHANGE VERSION EVERY UPDATE
-const CACHE_NAME = "achik-learn-v1.0.12";
+const CACHE_NAME = "achik-learn-v1.0.13";
 
 const ASSETS = [
   "/",
