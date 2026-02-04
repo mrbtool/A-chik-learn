@@ -11,10 +11,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>A·chik Learn | English-Garo</title>
     
-    <!-- Professional Font: Inter -->
+    <!-- Fonts & Icons -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    
-    <!-- Icons: FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <!-- Styles -->
@@ -36,13 +34,13 @@
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { font-family: 'Inter', sans-serif; background-color: var(--bg-color); margin: 0; padding: 0; color: var(--text-main); height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
 
-        /* --- Loader (Progress Bar) --- */
-        #app-loader { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--surface); z-index: 9999; display: flex; justify-content: center; align-items: center; flex-direction: column; }
+        /* --- Loader --- */
+        #app-loader { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--surface); z-index: 9999; display: flex; justify-content: center; align-items: center; flex-direction: column; transition: opacity 0.3s; }
         .loader-wrapper { width: 85%; max-width: 300px; text-align: center; }
-        .loader-logo { font-size: 1.8rem; font-weight: 800; color: var(--primary); margin-bottom: 30px; letter-spacing: -0.5px; animation: pulseLogo 2s infinite ease-in-out; }
-        .progress-track { width: 100%; height: 6px; background: #EFF6FF; border-radius: 10px; overflow: hidden; position: relative; box-shadow: inset 0 1px 2px rgba(0,0,0,0.05); }
-        .progress-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #2563EB, #06B6D4); border-radius: 10px; transition: width 0.4s cubic-bezier(0.25, 1, 0.5, 1); box-shadow: 0 0 10px rgba(37, 99, 235, 0.3); }
-        .loader-status { margin-top: 15px; font-size: 0.8rem; color: var(--text-sub); font-weight: 500; font-family: monospace; min-height: 1.2em; }
+        .loader-logo { font-size: 1.8rem; font-weight: 800; color: var(--primary); margin-bottom: 30px; animation: pulseLogo 2s infinite ease-in-out; }
+        .progress-track { width: 100%; height: 6px; background: #EFF6FF; border-radius: 10px; overflow: hidden; position: relative; }
+        .progress-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #2563EB, #06B6D4); border-radius: 10px; transition: width 0.4s ease; }
+        .loader-status { margin-top: 15px; font-size: 0.8rem; color: var(--text-sub); font-weight: 500; min-height: 1.2em; }
         @keyframes pulseLogo { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(0.95); opacity: 0.8; } }
 
         /* --- AUTH SCREEN --- */
@@ -67,9 +65,31 @@
 
         /* --- APP STRUCTURE --- */
         #main-app-container { display: flex; flex-direction: column; height: 100vh; width: 100%; }
-        .app-header { background-color: var(--surface); padding: 15px 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); display: flex; align-items: center; gap: 15px; position: sticky; top: 0; z-index: 50; }
+        .app-header { background-color: var(--surface); padding: 15px 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); display: flex; align-items: center; gap: 15px; position: sticky; top: 0; z-index: 50; flex-shrink: 0; }
         .header-icon-btn { background: none; border: none; font-size: 1.2rem; color: var(--text-main); cursor: pointer; padding: 5px; }
         .brand { font-weight: 700; font-size: 1.2rem; color: var(--primary); flex: 1; }
+
+        /* --- INLINE AD CARD --- */
+        .inline-ad-card { width: 100%; background-color: var(--surface); display: flex; justify-content: center; align-items: center; padding: 25px 0 10px 0; border-radius: 16px; margin-bottom: 25px; position: relative; box-shadow: 0 4px 10px rgba(0,0,0,0.05); border: 1px solid var(--border); overflow: hidden; flex-shrink: 0; min-height: 85px; }
+        .ad-badge { position: absolute; top: 0; left: 0; background-color: #E5E7EB; color: #6B7280; font-size: 0.7rem; font-weight: 700; padding: 3px 12px; border-bottom-right-radius: 12px; z-index: 10; letter-spacing: 0.5px; }
+
+        /* --- NEW PROMO GAME BANNERS (HOME SCREEN) --- */
+        .promo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 25px; width: 100%; }
+        @media (max-width: 480px) { .promo-grid { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: 5px; } .promo-grid::-webkit-scrollbar { display: none; } .promo-card { min-width: 85%; scroll-snap-align: center; } }
+        .promo-card { position: relative; height: 160px; border-radius: 24px; padding: 20px; color: white; overflow: hidden; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; box-shadow: 0 10px 20px rgba(0,0,0,0.1); display: flex; flex-direction: column; justify-content: space-between; border: 1px solid rgba(255,255,255,0.1); }
+        .promo-card:active { transform: scale(0.98); }
+        .theme-daily { background: linear-gradient(135deg, #2563EB 0%, #3B82F6 50%, #06B6D4 100%); }
+        .theme-pvp { background: linear-gradient(135deg, #7C3AED 0%, #8B5CF6 50%, #EC4899 100%); }
+        .promo-top { display: flex; align-items: flex-start; gap: 12px; position: relative; z-index: 2; }
+        .promo-icon-box { width: 42px; height: 42px; background: rgba(255,255,255,0.2); backdrop-filter: blur(5px); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; box-shadow: 0 4px 10px rgba(0,0,0,0.1); border: 1px solid rgba(255,255,255,0.2); }
+        .promo-info h3 { margin: 0; font-size: 1.1rem; font-weight: 800; letter-spacing: -0.5px; line-height: 1.2; text-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .promo-info p { margin: 4px 0 0 0; font-size: 0.8rem; opacity: 0.9; font-weight: 500; }
+        .promo-bg-icon { position: absolute; bottom: -20px; right: -20px; font-size: 7rem; opacity: 0.15; transform: rotate(-15deg); z-index: 1; pointer-events: none; }
+        .promo-btn { position: relative; z-index: 2; background: white; color: #1F2937; border: none; padding: 10px 18px; border-radius: 50px; font-size: 0.85rem; font-weight: 700; width: fit-content; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); transition: all 0.2s; }
+        .theme-daily .promo-btn { color: #2563EB; }
+        .theme-pvp .promo-btn { color: #7C3AED; }
+        .promo-btn i { font-size: 0.75rem; transition: transform 0.2s; }
+        .promo-card:hover .promo-btn i { transform: translateX(3px); }
 
         /* --- OFFLINE OVERLAY --- */
         #offline-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 255, 255, 0.98); z-index: 10000; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; opacity: 0; visibility: hidden; transition: all 0.3s ease; backdrop-filter: blur(5px); }
@@ -87,7 +107,7 @@
         .drawer-overlay.open { opacity: 1; visibility: visible; }
         .drawer-overlay.open .drawer-sidebar { transform: translateX(0); }
 
-        /* --- DRAWER PROFILE SECTION --- */
+        /* --- DRAWER PROFILE --- */
         .drawer-profile { background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%); padding: 40px 20px 30px 20px; color: white; display: flex; flex-direction: column; align-items: center; text-align: center; position: relative; overflow: hidden; clip-path: ellipse(150% 100% at 50% 0%); margin-bottom: 10px; }
         .drawer-profile::before, .drawer-profile::after { content: ""; position: absolute; border-radius: 50%; background: rgba(255,255,255,0.08); }
         .drawer-profile::before { width: 150px; height: 150px; top: -50px; right: -50px; }
@@ -120,61 +140,20 @@
         .search-input { width: 100%; padding: 14px 15px 14px 45px; border-radius: 12px; border: 1px solid var(--border); background: var(--surface); outline: none; font-size: 1rem; }
         .search-icon { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: var(--text-sub); }
         
-        /* NEW: SEARCH RESULTS & WORD CARD STYLES */
+        /* SEARCH RESULTS */
         #searchList { display: flex; flex-direction: column; gap: 12px; padding-bottom: 20px; }
-        
-        .word-card {
-            background: var(--surface);
-            border-radius: 16px;
-            padding: 16px 20px;
-            border: 1px solid rgba(0,0,0,0.05);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.03);
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            position: relative;
-            transition: transform 0.2s;
-            border-left: 5px solid var(--primary);
-            margin-bottom: 12px; /* Ensure spacing in lists */
-        }
-        
+        .word-card { background: var(--surface); border-radius: 16px; padding: 16px 20px; border: 1px solid rgba(0,0,0,0.05); box-shadow: 0 4px 15px rgba(0,0,0,0.03); display: flex; flex-direction: column; gap: 12px; position: relative; transition: transform 0.2s; border-left: 5px solid var(--primary); margin-bottom: 12px; }
         .word-card:active { transform: scale(0.98); }
-        
         .w-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
-        
         .w-text { flex: 1; word-wrap: break-word; line-height: 1.3; }
-        
-        /* English Word (Top) */
-        .w-eng { 
-            font-size: 1.05rem; 
-            font-weight: 700; 
-            color: var(--text-main); 
-        }
-        
-        /* Garo Word (Bottom) */
-        .w-garo { 
-            font-size: 0.95rem; 
-            font-weight: 600; 
-            color: var(--primary); 
-        }
-        
-        /* Badges */
-        .w-badge {
-            font-size: 0.65rem; 
-            font-weight: 700; 
-            padding: 4px 8px; 
-            border-radius: 6px;
-            letter-spacing: 0.5px; 
-            flex-shrink: 0; 
-            text-transform: uppercase;
-        }
-        
-        .bg-eng { background: #ECFDF5; color: #047857; border: 1px solid #D1FAE5; } /* Green Badge */
-        .bg-garo { background: #F0F9FF; color: #0369A1; border: 1px solid #E0F2FE; } /* Blue/Teal Badge */
-        
+        .w-eng { font-size: 1.05rem; font-weight: 700; color: var(--text-main); }
+        .w-garo { font-size: 0.95rem; font-weight: 600; color: var(--primary); }
+        .w-badge { font-size: 0.65rem; font-weight: 700; padding: 4px 8px; border-radius: 6px; letter-spacing: 0.5px; flex-shrink: 0; text-transform: uppercase; }
+        .bg-eng { background: #ECFDF5; color: #047857; border: 1px solid #D1FAE5; }
+        .bg-garo { background: #F0F9FF; color: #0369A1; border: 1px solid #E0F2FE; }
         .w-divider { height: 1px; background: #F3F4F6; width: 100%; }
 
-        /* FIXED VERTICAL LIST CSS */
+        /* CATEGORY LIST */
         #categoryGrid { display: flex !important; flex-direction: column !important; gap: 12px !important; width: 100% !important; margin-bottom: 25px !important; padding: 2px !important; background: transparent !important; box-shadow: none !important; border: none !important; overflow-x: hidden !important; grid-template-columns: none !important; }
         .cat-card { display: flex !important; flex-direction: row !important; align-items: center !important; justify-content: flex-start !important; width: 100% !important; box-sizing: border-box !important; background: #FFFFFF !important; padding: 16px 18px !important; border-radius: 16px !important; box-shadow: 0 2px 6px rgba(0,0,0,0.06) !important; border: 1px solid rgba(0,0,0,0.02) !important; cursor: pointer; transition: transform 0.2s; flex-shrink: 0; }
         .cat-card:active { transform: scale(0.98); background-color: #F9FAFB !important; }
@@ -199,29 +178,113 @@
         .dot { width: 8px; height: 8px; background: rgba(255,255,255,0.5); border-radius: 50%; transition: 0.3s; }
         .dot.active { background: white; width: 20px; border-radius: 4px; }
 
-        /* CLEAN WATER WAVE RANK THEME */
-        .rank-header { position: relative; width: 100%; min-height: 320px; background: linear-gradient(180deg, #0f172a 0%, #172554 100%); border-radius: 24px; color: white; box-shadow: 0 20px 40px rgba(23, 37, 84, 0.3); overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; margin-bottom: 30px; z-index: 1; }
-        .rank-content-wrapper { position: relative; z-index: 10; width: 100%; padding: 25px; text-align: center; display: flex; flex-direction: column; align-items: center; }
-        .current-rank-icon { width: 130px; height: 130px; margin-bottom: 10px; filter: drop-shadow(0 0 25px rgba(6, 182, 212, 0.4)); display: flex; align-items: center; justify-content: center; }
-        .current-rank-title { font-size: 1.8rem; font-weight: 800; letter-spacing: 2px; margin-bottom: 5px; text-transform: uppercase; background: linear-gradient(to right, #ffffff, #93c5fd); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-shadow: 0 4px 10px rgba(0,0,0,0.3); }
-        .current-score { font-size: 0.95rem; color: #cbd5e1; font-weight: 500; margin-bottom: 20px; background: rgba(255,255,255,0.1); padding: 5px 15px; border-radius: 20px; backdrop-filter: blur(5px); }
-        .rank-progress-bar-bg { width: 100%; max-width: 280px; height: 10px; background: rgba(255,255,255,0.15); border-radius: 10px; margin-top: 5px; overflow: hidden; backdrop-filter: blur(5px); border: 1px solid rgba(255,255,255,0.1); }
-        .rank-progress-fill { height: 100%; background: linear-gradient(90deg, #06b6d4, #3b82f6); width: 0%; border-radius: 10px; transition: width 1s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 0 10px rgba(6, 182, 212, 0.6); }
-        .next-rank-info { display: flex; justify-content: space-between; font-size: 0.75rem; margin-top: 8px; color: #94a3b8; width: 100%; max-width: 280px; }
-        .wave-container { position: absolute; bottom: 0; left: 0; width: 100%; height: 100%; overflow: hidden; z-index: 1; border-radius: 24px; }
-        .wave { position: absolute; bottom: -60%; left: -50%; width: 200%; height: 200%; background-color: rgba(255, 255, 255, 0.04); border-radius: 40%; animation: rotateWave 12s infinite linear; }
-        .wave:nth-child(2) { bottom: -65%; background-color: rgba(6, 182, 212, 0.05); animation: rotateWave 18s infinite linear reverse; border-radius: 35%; }
-        .wave:nth-child(3) { bottom: -70%; background-color: rgba(59, 130, 246, 0.05); animation: rotateWave 25s infinite linear; border-radius: 45%; }
-        @keyframes rotateWave { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        .rank-timeline { display: flex; flex-direction: column; gap: 15px; padding-left: 10px; }
-        .rank-tier { display: flex; align-items: center; padding: 15px; background: white; border-radius: 16px; opacity: 0.5; transform: scale(0.98); transition: 0.3s; border: 1px solid transparent; }
-        .rank-tier.active { opacity: 1; transform: scale(1); border-color: var(--primary); box-shadow: 0 4px 12px rgba(37, 99, 235, 0.1); }
-        .rank-tier.locked { filter: grayscale(1); }
-        .tier-icon { width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; border-radius: 50%; margin-right: 15px; background: transparent; }
-        .tier-info h4 { margin: 0; font-size: 1rem; font-weight: 700; }
-        .tier-info p { margin: 0; font-size: 0.8rem; color: var(--text-sub); }
+        /* --- NEW RANK THEME (GLASSMORPHISM) --- */
 
-        /* --- GAME SECTION STYLES --- */
+        /* Hero Card */
+        .gamification-hero {
+            position: relative;
+            background: linear-gradient(135deg, #1e3a8a 0%, #2563EB 100%);
+            border-radius: 28px;
+            padding: 30px 20px;
+            color: white;
+            box-shadow: 0 20px 40px -10px rgba(37, 99, 235, 0.5);
+            overflow: hidden;
+            margin-bottom: 25px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Background Orbs */
+        .hero-orb { position: absolute; border-radius: 50%; filter: blur(50px); z-index: 0; opacity: 0.5; }
+        .orb-1 { width: 160px; height: 160px; background: #06b6d4; top: -40px; left: -40px; animation: floatOrb 8s infinite ease-in-out; }
+        .orb-2 { width: 140px; height: 140px; background: #ec4899; bottom: -30px; right: -30px; animation: floatOrb 10s infinite ease-in-out reverse; }
+        @keyframes floatOrb { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(20px, 10px); } }
+
+        .hero-content { position: relative; z-index: 2; display: flex; flex-direction: column; align-items: center; }
+
+        /* Progress Ring */
+        .rank-circle-container { position: relative; width: 140px; height: 140px; margin-bottom: 15px; }
+        .rank-svg-ring { transform: rotate(-90deg); width: 100%; height: 100%; }
+        .rank-track { fill: none; stroke: rgba(255,255,255,0.1); stroke-width: 8; }
+        .rank-indicator { 
+            fill: none; stroke: url(#gradient); stroke-width: 8; stroke-linecap: round; 
+            stroke-dasharray: 377; stroke-dashoffset: 377; /* 2*PI*60 ≈ 377 */
+            transition: stroke-dashoffset 1.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Central Avatar */
+        .rank-avatar-inner {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 100px; height: 100px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.1); backdrop-filter: blur(8px);
+            display: flex; align-items: center; justify-content: center;
+            border: 1px solid rgba(255,255,255,0.3);
+            box-shadow: 0 0 25px rgba(255,255,255,0.1);
+        }
+
+        /* IMAGE FIXES FOR NEW RANK DASHBOARD */
+        .rank-avatar-inner img {
+            width: 70% !important; 
+            height: 70% !important; 
+            object-fit: contain; 
+            filter: drop-shadow(0 0 10px rgba(255,255,255,0.4)); 
+            animation: rankFloat 3s ease-in-out infinite; 
+        }
+
+        /* Typography */
+        .rank-title-badge {
+            background: rgba(255, 255, 255, 0.2); border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 6px 18px; border-radius: 20px; font-size: 0.85rem; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; backdrop-filter: blur(4px);
+        }
+        .rank-main-score { font-size: 2.2rem; font-weight: 800; line-height: 1; margin-bottom: 5px; text-shadow: 0 2px 10px rgba(0,0,0,0.2); }
+        .rank-sub-text { font-size: 0.9rem; opacity: 0.9; font-weight: 500; }
+
+        /* Stats Grid */
+        .stats-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 30px; }
+        .stat-box {
+            background: white; border-radius: 16px; padding: 15px; display: flex; align-items: center; gap: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid #f3f4f6; transition: transform 0.2s;
+        }
+        .stat-box:active { transform: scale(0.98); }
+        .stat-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; }
+        .s-purple { background: #f3e8ff; color: #7c3aed; }
+        .s-orange { background: #ffedd5; color: #f97316; }
+        .stat-info h4 { margin: 0; font-size: 1rem; font-weight: 800; color: #1f2937; }
+        .stat-info p { margin: 0; font-size: 0.75rem; color: #6b7280; font-weight: 600; text-transform: uppercase; }
+
+        /* Timeline Journey */
+        .journey-container { position: relative; padding-left: 10px; }
+        .journey-line { position: absolute; left: 34px; top: 25px; bottom: 25px; width: 3px; background: #e5e7eb; z-index: 0; }
+        .journey-fill { position: absolute; left: 34px; top: 25px; width: 3px; background: var(--primary); z-index: 0; height: 0%; transition: height 1s ease; }
+
+        .rank-step { position: relative; display: flex; align-items: center; margin-bottom: 20px; z-index: 1; opacity: 0.6; filter: grayscale(1); transition: all 0.3s; }
+        .rank-step.unlocked { opacity: 1; filter: grayscale(0); }
+        .rank-step.active { transform: scale(1.02); opacity: 1; filter: none; }
+
+        .step-icon-box {
+            width: 50px; height: 50px; border-radius: 50%; background: white; border: 3px solid #e5e7eb;
+            display: flex; align-items: center; justify-content: center; margin-right: 15px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05); flex-shrink: 0; transition: all 0.3s;
+            overflow: hidden;
+        }
+        .step-icon-box img { width: 65% !important; height: 65% !important; object-fit: contain; }
+
+        .rank-step.unlocked .step-icon-box { border-color: var(--primary); }
+        .rank-step.active .step-icon-box { border-color: #F59E0B; background: #FFFBEB; box-shadow: 0 0 15px rgba(245, 158, 11, 0.4); }
+
+        .step-card {
+            flex: 1; background: white; padding: 12px 15px; border-radius: 12px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.03); border: 1px solid #f3f4f6;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .rank-step.active .step-card { border-color: #F59E0B; background: linear-gradient(to right, #fff, #fffbeb); }
+        .step-info h3 { margin: 0; font-size: 0.95rem; font-weight: 700; color: #1f2937; }
+        .step-info span { font-size: 0.75rem; color: #6b7280; }
+        .step-req { font-size: 0.8rem; font-weight: 700; color: var(--primary); background: #eff6ff; padding: 4px 8px; border-radius: 6px; }
+
+        /* --- GAME SECTION --- */
         .game-menu-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 10px; }
         .game-card { border-radius: 20px; padding: 25px 15px; text-align: center; color: white; cursor: pointer; transition: transform 0.2s; box-shadow: 0 5px 15px rgba(0,0,0,0.1); display: flex; flex-direction: column; align-items: center; gap: 10px; }
         .game-card:active { transform: scale(0.97); }
@@ -243,7 +306,7 @@
         .game-btn { width:100%; padding:15px; border:1px solid #ddd; margin-bottom:10px; border-radius:12px; background:#fff; color: var(--text-main); font-weight:600; cursor:pointer; font-size: 1rem; transition: 0.2s; box-shadow: 0 2px 5px rgba(0,0,0,0.03); }
         .game-btn:active { transform: scale(0.98); }
         
-        /* LEADERBOARD MODAL STYLES (COMPACT & DARK) */
+        /* LEADERBOARD MODAL */
         .lb-modal-card { background: #111827; width: 100%; max-width: 380px; max-height: 70vh; border-radius: 20px; padding: 0; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.5); border: 1px solid #374151; transform: scale(0.9); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
         .custom-alert-overlay.open .lb-modal-card { transform: scale(1); }
         #leaderboard-ui { padding: 15px; flex: 1; overflow-y: auto; display: flex; flex-direction: column; color: white; font-family: 'Inter', sans-serif; scrollbar-width: none; }
@@ -334,12 +397,14 @@
         .nav-item { display: flex; flex-direction: column; align-items: center; color: var(--text-sub); font-size: 0.75rem; gap: 5px; cursor: pointer; width: 25%; }
         .nav-item.active { color: var(--primary); }
 
-        /* AD SCREEN */
-        #ad-interstitial { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #111827; z-index: 99999; display: none; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
+        /* --- FULL SCREEN AD OVERLAY --- */
+        #ad-interstitial { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000000; z-index: 99999; display: none; flex-direction: column; align-items: center; justify-content: center; }
         #ad-interstitial.active { display: flex; }
-        .ad-container-box { width: 100%; max-width: 320px; background: white; border-radius: 12px; padding: 10px; min-height: 300px; display: flex; align-items: center; justify-content: center; box-shadow: 0 10px 25px rgba(0,0,0,0.5); margin-bottom: 20px; text-align: center; color: #666; font-size: 0.9rem; }
-        #ad-timer-btn { background: rgba(255,255,255,0.1); color: #9CA3AF; border: 1px solid #374151; padding: 12px 30px; border-radius: 50px; font-weight: 600; cursor: not-allowed; transition: 0.3s; pointer-events: none; }
-        #ad-timer-btn.ready { background: #EF4444; color: white; border-color: #EF4444; cursor: pointer; pointer-events: auto; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4); }
+        .ad-container-box { width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; }
+        .ad-image { width: 100%; height: 100%; object-fit: contain; cursor: pointer; }
+        .ad-sponsored-label { position: absolute; top: 40px; left: 20px; background: rgba(0,0,0,0.6); color: #ccc; padding: 4px 10px; border-radius: 4px; font-size: 0.75rem; z-index: 10; pointer-events: none; }
+        #ad-timer-btn { position: absolute; bottom: 40px; right: 20px; background: rgba(0,0,0,0.6); color: white; border: 1px solid rgba(255,255,255,0.3); padding: 10px 25px; border-radius: 50px; font-weight: 600; font-size: 0.9rem; cursor: not-allowed; transition: all 0.3s ease; z-index: 100000; backdrop-filter: blur(4px); }
+        #ad-timer-btn.ready { background: white; color: black; border-color: white; cursor: pointer; pointer-events: auto; box-shadow: 0 4px 15px rgba(255, 255, 255, 0.2); }
         #ad-timer-btn.ready:active { transform: scale(0.95); }
     </style>
 </head>
@@ -463,12 +528,6 @@
 
         <!-- MAIN -->
         <main class="main-content">
-            <!-- AD BANNER -->
-            <div style="width: 100%; display: flex; justify-content: center; margin-bottom: 15px; min-height: 50px;">
-                <script type="text/javascript">atOptions={'key':'c1d577c74875916be469e70c0be2a659','format':'iframe','height':50,'width':320,'params':{}};</script>
-                <script type="text/javascript" src="https://summonteacherjunction.com/c1d577c74875916be469e70c0be2a659/invoke.js"></script>
-            </div>
-
             <!-- HOME -->
             <div id="home-view" class="view-section active">
                 <div class="search-container">
@@ -484,6 +543,56 @@
                         <div class="slider-wrapper" id="sliderWrapper"></div>
                         <div class="slider-dots" id="sliderDots"></div>
                     </div>
+                    
+                    <!-- INLINE AD CARD -->
+                    <div class="inline-ad-card">
+                        <div class="ad-badge">Ad</div>
+                        <script type="text/javascript">atOptions={'key':'c1d577c74875916be469e70c0be2a659','format':'iframe','height':50,'width':320,'params':{}};</script>
+                        <script type="text/javascript" src="https://summonteacherjunction.com/c1d577c74875916be469e70c0be2a659/invoke.js"></script>
+                    </div>
+
+                    <!-- NEW GAME BANNERS START -->
+                    <div class="promo-grid">
+                        
+                        <!-- Daily Quiz Card -->
+                        <div class="promo-card theme-daily" onclick="triggerHomeGame('daily')">
+                            <div class="promo-top">
+                                <div class="promo-icon-box">
+                                    <i class="fas fa-brain"></i>
+                                </div>
+                                <div class="promo-info">
+                                    <h3>Daily Quiz</h3>
+                                    <p>Expand your vocabulary</p>
+                                </div>
+                            </div>
+                            <button class="promo-btn">
+                                Play Now <i class="fas fa-arrow-right"></i>
+                            </button>
+                            <!-- Background Decorative Icon -->
+                            <i class="fas fa-lightbulb promo-bg-icon"></i>
+                        </div>
+
+                        <!-- PvP Online Card -->
+                        <div class="promo-card theme-pvp" onclick="triggerHomeGame('online')">
+                            <div class="promo-top">
+                                <div class="promo-icon-box">
+                                    <i class="fas fa-bolt"></i>
+                                </div>
+                                <div class="promo-info">
+                                    <h3>Online Battle</h3>
+                                    <p>Compete with friends</p>
+                                </div>
+                            </div>
+                            <button class="promo-btn">
+                                Find Match <i class="fas fa-gamepad"></i>
+                            </button>
+                            <!-- Background Decorative Icon -->
+                            <i class="fas fa-globe-asia promo-bg-icon"></i>
+                        </div>
+
+                    </div>
+                    <!-- NEW GAME BANNERS END -->
+
                     <div class="section-header">
                         <h3 style="font-size:1rem; margin:0;">Explore Categories</h3>
                         <span id="catViewAllBtn" onclick="window.toggleAllCategories()" style="display:none; font-size:0.9rem; color:var(--primary); font-weight:600; cursor:pointer; padding: 5px;">View All</span>
@@ -498,20 +607,71 @@
                 <div id="bookList"></div>
             </div>
 
-            <!-- RANKS -->
+            <!-- RANKS (NEW DESIGN) -->
             <div id="ranks-view" class="view-section">
-                <div class="rank-header">
-                    <div class="wave-container"><div class="wave"></div><div class="wave"></div><div class="wave"></div></div>
-                    <div class="rank-content-wrapper">
-                        <div id="currentRankIcon" class="current-rank-icon"></div>
-                        <div id="currentRankTitle" class="current-rank-title">Loading...</div>
-                        <div class="current-score"><span id="userTotalScore">0</span> Points</div>
-                        <div class="rank-progress-bar-bg"><div id="rankProgressBar" class="rank-progress-fill"></div></div>
-                        <div class="next-rank-info"><span>Current</span><span id="pointsToNext">...</span></div>
+                <!-- GLASS HERO CARD -->
+                <div class="gamification-hero">
+                    <!-- Animated Background Blobs -->
+                    <div class="hero-orb orb-1"></div>
+                    <div class="hero-orb orb-2"></div>
+                    
+                    <div class="hero-content">
+                        <div class="rank-circle-container">
+                            <!-- SVG Gradient for Ring -->
+                            <svg style="position: absolute; width:0; height:0;">
+                                <defs>
+                                    <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                                        <stop offset="0%" stop-color="#38bdf8" />
+                                        <stop offset="100%" stop-color="#ffffff" />
+                                    </linearGradient>
+                                </defs>
+                            </svg>
+                            
+                            <!-- Circular Progress Bar -->
+                            <svg class="rank-svg-ring" viewBox="0 0 140 140">
+                                <!-- Background Track -->
+                                <circle class="rank-track" cx="70" cy="70" r="60"></circle>
+                                <!-- Animated Progress Fill -->
+                                <circle id="rankSvgProgress" class="rank-indicator" cx="70" cy="70" r="60"></circle>
+                            </svg>
+                            
+                            <!-- Center Icon (Filled by rank-design.js) -->
+                            <div class="rank-avatar-inner" id="rankHeroIcon">
+                                <!-- Image will be injected here -->
+                            </div>
+                        </div>
+
+                        <div id="rankBadgeTitle" class="rank-title-badge">Loading...</div>
+                        <div class="rank-main-score"><span id="displayScore">0</span> <span style="font-size:1rem; font-weight:500;">Points</span></div>
+                        <div class="rank-sub-text" id="nextRankText">Calculating...</div>
                     </div>
                 </div>
-                <h3 style="font-size:1rem; margin-bottom:15px; color:var(--text-sub);">Rank Progression</h3>
-                <div class="rank-timeline" id="rankTimelineContainer"></div>
+
+                <!-- STATS ROW -->
+                <div class="stats-row">
+                    <div class="stat-box">
+                        <div class="stat-icon s-purple"><i class="fas fa-trophy"></i></div>
+                        <div class="stat-info">
+                            <h4>Rank</h4>
+                            <p id="statRankName">--</p>
+                        </div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-icon s-orange"><i class="fas fa-star"></i></div>
+                        <div class="stat-info">
+                            <h4 id="highScoreStat">0</h4>
+                            <p>Best Score</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- JOURNEY TIMELINE -->
+                <h3 style="font-size:1.1rem; margin-bottom:15px; font-weight:800; color:var(--text-main);">Rank Journey</h3>
+                <div class="journey-container" id="rankJourneyList">
+                    <div class="journey-line"></div>
+                    <div class="journey-fill" id="journeyFillLine"></div>
+                    <!-- Ranks injected via JavaScript -->
+                </div>
             </div>
 
             <!-- GAMES -->
@@ -565,7 +725,12 @@
     
     <div id="categorySheet" class="bottom-sheet-overlay" onclick="closeCatSheet()"><div class="bottom-sheet" onclick="event.stopPropagation()"><div class="info-header"><span id="sheetTitle">Category</span><button class="close-icon-btn" onclick="closeCatSheet()"><i class="fas fa-times"></i></button></div><div style="padding:20px; overflow-y:auto; flex:1;" id="sheetContent"></div></div></div>
 
-    <div id="ad-interstitial" onclick="event.stopPropagation()"><div class="ad-container-box"><div style="margin-bottom: 10px;">Advertisement</div><script src="https://summonteacherjunction.com/a4/0d/2c/a40d2c59d94e7699861a5c523749be64.js"></script></div><button id="ad-timer-btn" onclick="closeAdScreen()">Wait 5s...</button></div>
+    <!-- DYNAMIC AD SCREEN -->
+    <div id="ad-interstitial" onclick="event.stopPropagation()">
+        <div id="ad-content-wrapper" class="ad-container-box"></div>
+        <div class="ad-sponsored-label">Sponsored Advertisement</div>
+        <button id="ad-timer-btn" onclick="closeAdScreen()">Loading...</button>
+    </div>
 
 <!-- SLIDER & UI LOGIC -->
     <script>
@@ -576,55 +741,96 @@
         };
 
         window.enforceLogin = (feature) => {
-            // Force show auth screen
             document.getElementById('main-app-container').classList.add('hidden');
             document.getElementById('auth-container').classList.remove('hidden');
-            // Reset to login form
             showAuthForm('login');
-            // Show message
-            const err = document.getElementById('login-error');
-            err.innerText = `Please sign in to access ${feature}.`;
-            err.style.display = 'block';
+            document.getElementById('login-error').innerText = `Please sign in to access ${feature}.`;
+            document.getElementById('login-error').style.display = 'block';
         };
 
         // --- AD INTERSTITIAL LOGIC ---
         let adHasShown = false;
+        window.ads = [];
+
         window.triggerAdBreak = function() {
-            if (adHasShown) return; 
+            if (!window.ads || window.ads.length === 0) return;
+            const randomIndex = Math.floor(Math.random() * window.ads.length);
+            const ad = window.ads[randomIndex];
             const adScreen = document.getElementById('ad-interstitial');
+            const wrapper = document.getElementById('ad-content-wrapper');
             const btn = document.getElementById('ad-timer-btn');
+            
+            wrapper.innerHTML = `<img src="${ad.imageUrl}" class="ad-image" onclick="window.open('${ad.targetUrl}', '_blank')">`;
             adScreen.classList.add('active');
             adHasShown = true;
+            
             let countdown = 5;
-            btn.innerText = `Wait ${countdown}s...`;
+            btn.innerText = `Skip in ${countdown}`;
             btn.classList.remove('ready');
-            const timer = setInterval(() => {
+            
+            if(window.adTimerInterval) clearInterval(window.adTimerInterval);
+            window.adTimerInterval = setInterval(() => {
                 countdown--;
-                if(countdown > 0) btn.innerText = `Wait ${countdown}s...`;
-                else { clearInterval(timer); btn.innerText = "Close Advertisement"; btn.classList.add('ready'); }
+                if(countdown > 0) {
+                    btn.innerText = `Skip in ${countdown}`;
+                } else { 
+                    clearInterval(window.adTimerInterval); 
+                    btn.innerText = "Skip Video"; 
+                    btn.classList.add('ready'); 
+                }
             }, 1000);
         };
-        function closeAdScreen() {
+
+        window.closeAdScreen = function() {
             if(document.getElementById('ad-timer-btn').classList.contains('ready')) {
                 document.getElementById('ad-interstitial').classList.remove('active');
+                setTimeout(() => { document.getElementById('ad-content-wrapper').innerHTML = ""; }, 300);
             }
-        }
-        document.body.addEventListener('click', function() { if(!adHasShown) window.triggerAdBreak(); }, { once: true });
+        };
+        
+        document.body.addEventListener('click', function() { 
+            if(!adHasShown && window.ads && window.ads.length > 0) {
+                setTimeout(() => { window.triggerAdBreak(); }, 1500);
+            } 
+        }, { once: true });
 
-        // --- SLIDER ---
-        let currentSlide = 0, slideInterval, totalSlides = 0;
-        function initSlider() {
+        // --- SLIDER (FIXED LOGIC) ---
+        let currentSlide = 0, slideInterval, totalSlides = 0, sliderInitialized = false;
+
+        // Separate function to attach listeners only ONCE
+        function initSliderEvents() {
+            if (sliderInitialized) return;
             const wrapper = document.getElementById('sliderWrapper');
-            if(slideInterval) clearInterval(slideInterval);
-            if(totalSlides <= 1) return;
-            const startAutoSlide = () => { slideInterval = setInterval(() => { nextSlide(); }, 3500); };
-            const stopAutoSlide = () => { clearInterval(slideInterval); };
             let startX = 0, endX = 0;
+
             wrapper.addEventListener('touchstart', (e) => { stopAutoSlide(); startX = e.touches[0].clientX; }, {passive: true});
             wrapper.addEventListener('touchmove', (e) => { endX = e.touches[0].clientX; }, {passive: true});
-            wrapper.addEventListener('touchend', () => { if(startX > 0 && endX > 0) { let diff = startX - endX; if(diff > 50) nextSlide(); if(diff < -50) prevSlide(); } startX = 0; endX = 0; startAutoSlide(); });
-            startAutoSlide();
+            wrapper.addEventListener('touchend', () => { 
+                if(startX > 0 && endX > 0) { 
+                    let diff = startX - endX; 
+                    if(diff > 50) nextSlide(); 
+                    if(diff < -50) prevSlide(); 
+                } 
+                startX = 0; endX = 0; 
+                startAutoSlide(); 
+            });
+            sliderInitialized = true;
         }
+
+        function startAutoSlide() {
+            stopAutoSlide(); // Ensure no duplicates
+            if (totalSlides > 1) {
+                slideInterval = setInterval(() => { nextSlide(); }, 3500);
+            }
+        }
+
+        function stopAutoSlide() {
+            if (slideInterval) {
+                clearInterval(slideInterval);
+                slideInterval = null;
+            }
+        }
+
         function updateSlidePosition() {
             const wrapper = document.getElementById('sliderWrapper');
             const dots = document.querySelectorAll('.dot');
@@ -632,94 +838,84 @@
             wrapper.style.transform = `translateX(-${currentSlide * 100}%)`;
             dots.forEach((dot, index) => { dot.classList.toggle('active', index === currentSlide); });
         }
+
         function nextSlide() { if(totalSlides <= 1) return; currentSlide = (currentSlide + 1) % totalSlides; updateSlidePosition(); }
         function prevSlide() { if(totalSlides <= 1) return; currentSlide = (currentSlide - 1 + totalSlides) % totalSlides; updateSlidePosition(); }
+
         window.renderSlider = function() {
             const container = document.querySelector('.banner-slider');
             const wrapper = document.getElementById('sliderWrapper');
             const dotsContainer = document.getElementById('sliderDots');
-            wrapper.innerHTML = ""; dotsContainer.innerHTML = "";
+            
             const validBanners = (window.banners || []).filter(b => b.imageUrl && b.imageUrl.trim() !== "");
-            if(validBanners.length === 0) { container.style.display = 'none'; return; } else { container.style.display = 'block'; }
-            totalSlides = validBanners.length; currentSlide = 0; wrapper.style.transform = `translateX(0)`;
+            
+            if(validBanners.length === 0) { container.style.display = 'none'; return; } 
+            else { container.style.display = 'block'; }
+            
+            // Re-render HTML content
+            wrapper.innerHTML = ""; dotsContainer.innerHTML = "";
+            totalSlides = validBanners.length; 
+            currentSlide = 0; 
+            wrapper.style.transform = `translateX(0)`;
+            
             validBanners.forEach((slide, index) => {
                 const slideDiv = document.createElement('div'); slideDiv.className = 'slide';
                 if(slide.imageUrl.startsWith('linear-gradient') || slide.imageUrl.startsWith('#')) { slideDiv.style.background = slide.imageUrl; } else { slideDiv.style.backgroundImage = `url('${slide.imageUrl}')`; }
                 if(slide.targetUrl) { slideDiv.style.cursor = "pointer"; slideDiv.onclick = () => window.open(slide.targetUrl, '_blank'); }
                 slideDiv.innerHTML = `<div class="slide-content"><div class="slide-title">${slide.title || ''}</div><div class="slide-desc">${slide.desc || ''}</div></div>`;
                 wrapper.appendChild(slideDiv);
-                if(totalSlides > 1) { const dot = document.createElement('div'); dot.className = index === 0 ? 'dot active' : 'dot'; dot.onclick = () => { currentSlide = index; updateSlidePosition(); }; dotsContainer.appendChild(dot); }
+                
+                if(totalSlides > 1) { 
+                    const dot = document.createElement('div'); 
+                    dot.className = index === 0 ? 'dot active' : 'dot'; 
+                    dot.onclick = () => { currentSlide = index; updateSlidePosition(); }; 
+                    dotsContainer.appendChild(dot); 
+                }
             });
-            initSlider();
+            
+            // Attach events only if not done
+            initSliderEvents();
+            startAutoSlide();
         };
 
-        // --- IMPROVED SEARCH ALGORITHM (Fuzzy) ---
-        function levenshtein(a, b) {
-            const matrix = [];
-            for (let i = 0; i <= b.length; i++) { matrix[i] = [i]; }
-            for (let j = 0; j <= a.length; j++) { matrix[0][j] = j; }
-            for (let i = 1; i <= b.length; i++) {
-                for (let j = 1; j <= a.length; j++) {
-                    if (b.charAt(i - 1) == a.charAt(j - 1)) { matrix[i][j] = matrix[i - 1][j - 1]; } 
-                    else { matrix[i][j] = Math.min(matrix[i - 1][j - 1] + 1, Math.min(matrix[i][j - 1] + 1, matrix[i - 1][j] + 1)); }
-                }
-            }
-            return matrix[b.length][a.length];
-        }
-
+        // --- SEARCH (OPTIMIZED) ---
+        let searchDebounce;
         window.searchDictionary = function() {
-            const input = document.getElementById('searchInput');
-            const filter = input.value.toLowerCase().trim();
-            const resultList = document.getElementById('searchList');
-            const resultContainer = document.getElementById('searchResults');
-            const dashboard = document.getElementById('dashboardContent');
-            
-            if (filter.length === 0) { resultContainer.style.display = "none"; dashboard.style.display = "block"; return; }
-            dashboard.style.display = "none"; resultContainer.style.display = "block"; resultList.innerHTML = "";
-            if (!window.dictionary || window.dictionary.length === 0) { resultList.innerHTML = "<p style='text-align:center; padding:20px; color:#888;'>Dictionary data loading...</p>"; return; }
-            
-            // Priority 1: Exact Start or Contains
-            const exactMatches = [];
-            const fuzzyMatches = [];
-            
-            window.dictionary.forEach(item => {
-                const eng = (item.eng || "").toLowerCase();
-                const garo = (item.garo || "").toLowerCase();
-                // Exact start or includes
-                if (eng.startsWith(filter) || garo.startsWith(filter)) { exactMatches.push({word: item, score: 10}); }
-                else if (eng.includes(filter) || garo.includes(filter)) { exactMatches.push({word: item, score: 5}); }
-                // Fuzzy (Only if input > 3 chars)
-                else if (filter.length > 3) {
-                    const distEng = levenshtein(eng, filter);
-                    const distGaro = levenshtein(garo, filter);
-                    // Allow up to 2 typos
-                    if (distEng <= 2 || distGaro <= 2) { fuzzyMatches.push({word: item, score: 1}); }
-                }
-            });
+            clearTimeout(searchDebounce);
+            searchDebounce = setTimeout(() => {
+                const input = document.getElementById('searchInput');
+                const filter = input.value.toLowerCase().trim();
+                const resultList = document.getElementById('searchList');
+                const resultContainer = document.getElementById('searchResults');
+                const dashboard = document.getElementById('dashboardContent');
+                
+                if (filter.length === 0) { resultContainer.style.display = "none"; dashboard.style.display = "block"; return; }
+                dashboard.style.display = "none"; resultContainer.style.display = "block"; resultList.innerHTML = "";
+                if (!window.dictionary || window.dictionary.length === 0) { resultList.innerHTML = "<p style='text-align:center; padding:20px; color:#888;'>Dictionary data loading...</p>"; return; }
+                
+                const exactMatches = [];
+                window.dictionary.forEach(item => {
+                    const eng = (item.eng || "").toLowerCase();
+                    const garo = (item.garo || "").toLowerCase();
+                    if (eng.includes(filter) || garo.includes(filter)) { exactMatches.push(item); }
+                });
 
-            // Combine and Dedup
-            const allMatches = [...exactMatches, ...fuzzyMatches].sort((a,b) => b.score - a.score);
-            // Limit render to 100 to prevent freeze
-            const uniqueResults = [...new Set(allMatches.map(m => m.word))].slice(0, 100);
+                // Limit result to 50 for performance
+                const uniqueResults = exactMatches.slice(0, 50);
 
-            if (uniqueResults.length > 0) { 
-                let html = ""; 
-                uniqueResults.forEach(word => { 
-                    html += `
-                    <div class="word-card" onclick="void(0)">
-                        <div class="w-row">
-                            <span class="w-text w-eng">${word.eng}</span>
-                            <span class="w-badge bg-eng">ENG</span>
-                        </div>
-                        <div class="w-divider"></div>
-                        <div class="w-row">
-                            <span class="w-text w-garo">${word.garo}</span>
-                            <span class="w-badge bg-garo">GARO</span>
-                        </div>
-                    </div>`; 
-                }); 
-                resultList.innerHTML = html; 
-            } else { resultList.innerHTML = `<div style='text-align:center; padding:20px; color:#aaa;'>No results found for "${input.value}"</div>`; }
+                if (uniqueResults.length > 0) { 
+                    let html = ""; 
+                    uniqueResults.forEach(word => { 
+                        html += `
+                        <div class="word-card" onclick="void(0)">
+                            <div class="w-row"><span class="w-text w-eng">${word.eng}</span><span class="w-badge bg-eng">ENG</span></div>
+                            <div class="w-divider"></div>
+                            <div class="w-row"><span class="w-text w-garo">${word.garo}</span><span class="w-badge bg-garo">GARO</span></div>
+                        </div>`; 
+                    }); 
+                    resultList.innerHTML = html; 
+                } else { resultList.innerHTML = `<div style='text-align:center; padding:20px; color:#aaa;'>No results found for "${input.value}"</div>`; }
+            }, 300); // 300ms delay
         };
 
         // --- ALERTS & SHARE ---
@@ -782,6 +978,40 @@
             if(t === 'games') window.exitGame();
         }
 
+        /* --- HOME SCREEN GAME TRIGGER LOGIC --- */
+        window.triggerHomeGame = function(type) {
+            // 1. Force navigation to Games Tab
+            const gamesView = document.getElementById('games-view');
+            const homeView = document.getElementById('home-view');
+            
+            // Switch active classes for views
+            document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active'));
+            gamesView.classList.add('active');
+
+            // Update Bottom Navigation Bar Visuals
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            // Find game nav item by icon or text content if needed, but assuming index based on standard layout
+            // Here we assume standard bottom nav usage
+            const navItems = document.querySelectorAll('.nav-item');
+            navItems.forEach(item => {
+                if(item.innerHTML.includes('fa-gamepad') || item.innerText.includes('Games')) {
+                    item.classList.add('active');
+                }
+            });
+
+            // Push history state
+            window.history.pushState({ view: 'games' }, "", "#games");
+
+            // 2. Trigger the specific game logic
+            setTimeout(() => {
+                if (type === 'daily') {
+                    window.startGame('daily');
+                } else if (type === 'online') {
+                    window.location.href = 'online-game.html'; 
+                }
+            }, 100); 
+        };
+
         window.openReader = (id) => {
             const b = window.books.find(x => x.id === id);
             if(b) {
@@ -792,7 +1022,7 @@
                 let paragraphs = formattedContent.split(/\\n|\n/);
                 let finalBodyHtml = "";
                 paragraphs.forEach(para => { const text = para.trim(); if(text.length > 0) { if(text.includes('paper-separator')) { finalBodyHtml += text; } else { finalBodyHtml += `<p>${text}</p>`; } } });
-                const paperHtml = `<div class="paper-sheet"><div class="paper-title">${b.title}</div><div class="paper-desc-box"><strong>Summary:</strong> ${b.desc || "No description available."}<br><span style="font-size:0.85rem; color:#b45309; margin-top:8px; display:inline-block; font-weight:600;"><i class="far fa-clock"></i> Read Time: ${b.time || "1 min"}</span></div><div class="paper-body">${finalBodyHtml}</div><div style="text-align:center; margin-top:60px; color:#aaa; font-size:1.5rem;">~ ❦ ~</div></div>`;
+                const paperHtml = `<div class="paper-sheet"><div class="paper-title">${b.title}</div><div class="paper-desc-box"><strong>Summary:</strong> ${b.desc || "No description available."}<br><span style="font-size:0.85rem; color:#b45309; margin-top:8px; display:inline-block; font-weight:600;"><i class="fas fa-clock"></i> Read Time: ${b.time || "1 min"}</span></div><div class="paper-body">${finalBodyHtml}</div><div style="text-align:center; margin-top:60px; color:#aaa; font-size:1.5rem;">~ ❦ ~</div></div>`;
                 document.getElementById('readerBody').innerHTML = paperHtml; document.getElementById('readerModal').classList.add('open'); pushHistoryState('reader');
             }
         };
@@ -805,18 +1035,7 @@
             let html = "";
             if(words.length) {
                 words.forEach(w => {
-                    html += `
-                    <div class="word-card" onclick="void(0)">
-                        <div class="w-row">
-                            <span class="w-text w-eng">${w.eng}</span>
-                            <span class="w-badge bg-eng">ENG</span>
-                        </div>
-                        <div class="w-divider"></div>
-                        <div class="w-row">
-                            <span class="w-text w-garo">${w.garo}</span>
-                            <span class="w-badge bg-garo">GARO</span>
-                        </div>
-                    </div>`;
+                    html += `<div class="word-card"><div class="w-row"><span class="w-text w-eng">${w.eng}</span><span class="w-badge bg-eng">ENG</span></div><div class="w-divider"></div><div class="w-row"><span class="w-text w-garo">${w.garo}</span><span class="w-badge bg-garo">GARO</span></div></div>`;
                 });
             } else {
                 html = "<p style='text-align:center; color:#888; margin-top:20px;'>No words found in this category.</p>";
@@ -830,7 +1049,6 @@
         let gameScore = 0, currentGameMode = 'daily', timeRemaining = 60, gameInterval = null, currentQuestionCount = 0; const TOTAL_DAILY_QUESTIONS = 10;
         function escapeStr(str) { return str.replace(/'/g, "\\'"); }
         window.startGame = (mode) => {
-            // Protected Feature
             if(!window.currentUser) { window.enforceLogin('Games'); return; }
             const dict = window.dictionary;
             if(!dict || dict.length < 4) { appAlert("Not Enough Data", "Dictionary must have 4+ words to play."); return; }
@@ -842,7 +1060,20 @@
         };
         window.exitGame = () => { clearInterval(gameInterval); document.getElementById('activeGameInterface').classList.remove('active'); document.getElementById('gameHub').style.display = 'block'; };
         function startTimer() { clearInterval(gameInterval); gameInterval = setInterval(() => { timeRemaining--; const pct = (timeRemaining / 60) * 100; document.getElementById('timerBar').style.width = pct + '%'; if(timeRemaining <= 0) endGame(); }, 1000); }
-        function endGame() { clearInterval(gameInterval); if(window.saveGamePoints) { window.saveGamePoints(gameScore, currentGameMode); } const currentHigh = parseInt(document.getElementById('highScoreVal').innerText) || 0; if(gameScore > currentHigh) { document.getElementById('highScoreVal').innerText = gameScore; } appAlert("Game Over!", `You earned ${gameScore} points!`, () => { window.exitGame(); }); }
+        
+        function endGame() { 
+            clearInterval(gameInterval); 
+            if(window.saveGamePoints) { window.saveGamePoints(gameScore, currentGameMode); } 
+            const currentHigh = parseInt(document.getElementById('highScoreVal').innerText) || 0; 
+            if(gameScore > currentHigh) { document.getElementById('highScoreVal').innerText = gameScore; } 
+            
+            const onGameExit = () => {
+                if(Math.random() < 0.6) { window.triggerAdBreak(); }
+                window.exitGame();
+            };
+            appAlert("Game Over!", `You earned ${gameScore} points!`, onGameExit); 
+        }
+
         window.nextQuestion = () => {
             const dict = window.dictionary; if(!dict) return; const c = dict[Math.floor(Math.random() * dict.length)]; document.getElementById('quizQuestion').innerText = c.eng;
             if(currentGameMode === 'daily') { document.getElementById('gameInstruction').innerText = `Question ${currentQuestionCount + 1}/${TOTAL_DAILY_QUESTIONS}`; } else { document.getElementById('gameInstruction').innerText = "Choose the correct translation"; }
@@ -868,60 +1099,6 @@
     <script src="rank.js"></script>
 
     <script type="module">
-        // =========================================================
-        // AUTOMATIC VERSION SYNC WITH SW.JS
-        // =========================================================
-        async function syncAppVersion() {
-            try {
-                // Fetch sw.js with timestamp to bypass browser cache
-                const response = await fetch('./sw.js?t=' + Date.now());
-                const text = await response.text();
-                let version = 'Online';
-                
-                // Extract version string
-                const vMatch = text.match(/VERSION\s*=\s*['"](.+)['"]/);
-                const cMatch = text.match(/['"].*v([\d\.]+).*['"]/);
-                
-                if(vMatch) version = vMatch[1];
-                else if(cMatch) version = cMatch[1];
-
-                const verDisplay = document.getElementById('appVersionDisplay');
-                if(verDisplay) verDisplay.innerText = "Version " + version;
-
-                const storedVersion = localStorage.getItem('app_cur_version');
-                
-                // VERSION MISMATCH: Clear Cache and Reload
-                if (storedVersion && storedVersion !== version && version !== 'Online') {
-                    console.log(`Update found: ${version}. Clearing cache.`);
-                    
-                    // 1. Clear LocalStorage Data (Including Dictionary Data)
-                    localStorage.clear();
-                    localStorage.setItem('app_cur_version', version);
-                    
-                    // 2. Clear Service Worker Caches
-                    if('caches' in window) {
-                        const keys = await caches.keys();
-                        await Promise.all(keys.map(key => caches.delete(key)));
-                    }
-                    
-                    // 3. Unregister SW to force update
-                    if('serviceWorker' in navigator) {
-                        const regs = await navigator.serviceWorker.getRegistrations();
-                        for(let reg of regs) await reg.unregister();
-                    }
-                    
-                    window.location.reload();
-                } else if (!storedVersion && version !== 'Online') {
-                    localStorage.setItem('app_cur_version', version);
-                }
-            } catch (e) {
-                console.warn("Ver check fail", e);
-                const verDisplay = document.getElementById('appVersionDisplay');
-                if(verDisplay) verDisplay.innerText = "Version Online";
-            }
-        }
-        syncAppVersion();
-
         import { app, db, auth } from "./auth.js";
         import { getFirestore, collection, getDocs, doc, setDoc, getDoc, updateDoc, increment, query, orderBy, limit, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
         import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
@@ -948,19 +1125,12 @@
             const userRef = doc(db, "users", auth.currentUser.uid);
             try {
                 const userSnap = await getDoc(userRef); 
-                let currentTotal = userSnap.data().totalScore || 0;
                 let updates = { totalScore: increment(score), lastPlayed: new Date() };
-                
                 if (userSnap.exists()) { 
                     const currentHigh = userSnap.data().highScore || 0; 
                     if (score > currentHigh) updates.highScore = score; 
-                } else { 
-                    updates.highScore = score; 
-                }
-                
+                } else { updates.highScore = score; }
                 await setDoc(userRef, updates, { merge: true });
-                
-                // NOTE: onSnapshot listener will handle UI updates automatically
             } catch (e) { console.error("Error saving game points:", e); }
         };
 
@@ -990,58 +1160,30 @@
             if(sessionStorage.getItem('app_loaded_session') === 'true') loader.style.display = 'none';
 
             if (user) {
-                // LOGGED IN
-                console.log("User logged in:", user.uid);
                 window.currentUser = user;
                 window.hideAuthScreen();
                 
-                // -------------------------------------------------------------
-                // CHECK FOR ONLINE GAME POINTS & SHOW ALERT
-                // -------------------------------------------------------------
                 const pendingPoints = localStorage.getItem('pending_points_update');
                 if (pendingPoints) {
                     const pointsToAdd = parseInt(pendingPoints);
                     if (!isNaN(pointsToAdd) && pointsToAdd > 0) {
-                        // 1. Update Firebase
                         await window.saveGamePoints(pointsToAdd, 'online');
-                        
-                        // 2. Clear storage so it doesn't run again on refresh
                         localStorage.removeItem('pending_points_update');
-
-                        // 3. Show Popup Alert
-                        setTimeout(() => {
-                            appAlert(
-                                "Battle Report", 
-                                `Victory! You retrieved ${pointsToAdd} points from your Online Battle.`,
-                                null // Standard OK button
-                            );
-                        }, 1500);
-                    } else {
-                        localStorage.removeItem('pending_points_update');
-                    }
+                        setTimeout(() => { appAlert("Battle Report", `Victory! You retrieved ${pointsToAdd} points from your Online Battle.`, null); }, 1500);
+                    } else { localStorage.removeItem('pending_points_update'); }
                 }
-                // -------------------------------------------------------------
                 
-                // REALTIME LISTENER FOR USER DATA (UPDATES RANK/SCORE INSTANTLY)
                 const userRef = doc(db, "users", user.uid);
                 onSnapshot(userRef, (docSnap) => {
                     if (docSnap.exists()) {
                         const data = docSnap.data();
-                        // Sync Global State
                         window.userScore = data.highScore || 0;
                         window.userTotalScore = data.totalScore || 0;
-                        
-                        // Update UI Elements
                         const highScoreEl = document.getElementById('highScoreVal');
                         if(highScoreEl) highScoreEl.innerText = window.userScore;
-                        
                         const totalScoreEl = document.getElementById('userTotalScore');
                         if(totalScoreEl) totalScoreEl.innerText = window.userTotalScore;
-                        
-                        // Trigger Rank UI Refresh
                         if(window.renderRankScreen) window.renderRankScreen();
-                        
-                        // Profile UI Update
                         if(data.uniqueId) document.getElementById('userIdDisplay').innerText = "ID: " + data.uniqueId;
                         if(data.photoBase64) document.getElementById('drawerAvatarIcon').innerHTML = `<img src="${data.photoBase64}" alt="Profile">`;
                     }
@@ -1064,20 +1206,18 @@
                 if(!dataLoaded) loadData(); else loader.style.display = 'none';
 
             } else {
-                // GUEST MODE
-                console.log("Guest Mode Active");
                 window.currentUser = null;
                 updateDrawerForGuest();
-                // Ensure main app is visible, do NOT show auth screen automatically
                 document.getElementById('auth-container').classList.add('hidden');
                 document.getElementById('main-app-container').classList.remove('hidden');
-                
                 if(!dataLoaded) loadData(); else loader.style.display = 'none';
             }
         });
 
         async function loadData() {
-            const loader = document.getElementById('app-loader'); const bar = document.getElementById('loadingBarFill'); const statusTxt = document.getElementById('loadingText');
+            const loader = document.getElementById('app-loader'); 
+            const bar = document.getElementById('loadingBarFill'); 
+            const statusTxt = document.getElementById('loadingText');
             const updateProgress = (pct, msg) => { if(bar) bar.style.width = `${pct}%`; if(statusTxt) statusTxt.innerText = msg; };
             
             // 1. FAST LOAD FROM LOCAL STORAGE (OFFLINE SUPPORT)
@@ -1093,6 +1233,7 @@
                         window.books = parsed.books || [];
                         window.drawerItems = parsed.drawerItems || [];
                         window.banners = parsed.banners || [];
+                        window.ads = parsed.ads || [];
                         
                         dataLoaded = true;
                         usedCache = true;
@@ -1105,58 +1246,56 @@
             }
 
             // 2. ALWAYS FETCH FRESH DATA FROM FIREBASE (BACKGROUND REFRESH)
-            // Even if cache loaded, we fetch new data to ensure "missing words" are found.
             if(!usedCache) { loader.style.display = 'flex'; updateProgress(5, "Connecting..."); }
             
             try {
-                // Fetching in parallel for speed if needed, but sequential for progress bar accuracy
-                const catSnap = await getDocs(collection(db, "categories")); 
-                const newCategories = []; 
-                catSnap.forEach(doc => newCategories.push({ id: doc.id, ...doc.data() })); 
+                // Parallel fetching
+                const [catSnap, wordSnap, bookSnap, drawerSnap, bannerSnap, adSnap] = await Promise.all([
+                    getDocs(collection(db, "categories")),
+                    getDocs(collection(db, "words")),
+                    getDocs(collection(db, "books")),
+                    getDocs(collection(db, "drawer_items")),
+                    getDocs(collection(db, "banners")),
+                    getDocs(collection(db, "ads"))
+                ]);
+
+                if(!usedCache) updateProgress(60, "Processing Data...");
+
+                const newCategories = []; catSnap.forEach(doc => newCategories.push({ id: doc.id, ...doc.data() })); 
+                const newDictionary = []; wordSnap.forEach(doc => newDictionary.push({ id: doc.id, ...doc.data() })); 
+                const newBooks = []; bookSnap.forEach(doc => newBooks.push({ id: doc.id, ...doc.data() })); 
+                const newDrawerItems = []; drawerSnap.forEach(doc => newDrawerItems.push({ id: doc.id, ...doc.data() })); 
+                const newBanners = []; bannerSnap.forEach(doc => newBanners.push({ id: doc.id, ...doc.data() })); 
+                const newAds = []; adSnap.forEach(doc => { const d = doc.data(); if(d.active) newAds.push({ id: doc.id, ...d }); });
+
+                // If cache was used, only re-render if data count changed (Simple Check)
+                // This prevents the screen from "blinking" abnormally if data is the same
+                const isDataDifferent = (window.dictionary.length !== newDictionary.length) || (window.banners.length !== newBanners.length);
+
                 window.categories = newCategories;
-                if(!usedCache) updateProgress(30, "Loading Categories...");
-
-                // LOAD ALL WORDS (To fix "missing words" issue)
-                const wordSnap = await getDocs(collection(db, "words")); 
-                const newDictionary = []; 
-                wordSnap.forEach(doc => newDictionary.push({ id: doc.id, ...doc.data() })); 
                 window.dictionary = newDictionary;
-                if(!usedCache) updateProgress(60, "Loading Dictionary...");
-
-                const bookSnap = await getDocs(collection(db, "books")); 
-                const newBooks = []; 
-                bookSnap.forEach(doc => newBooks.push({ id: doc.id, ...doc.data() })); 
                 window.books = newBooks;
-                if(!usedCache) updateProgress(75, "Loading Library...");
-
-                const drawerSnap = await getDocs(collection(db, "drawer_items")); 
-                const newDrawerItems = []; 
-                drawerSnap.forEach(doc => newDrawerItems.push({ id: doc.id, ...doc.data() })); 
                 window.drawerItems = newDrawerItems;
-                if(!usedCache) updateProgress(85, "Configuring...");
-
-                const bannerSnap = await getDocs(collection(db, "banners")); 
-                const newBanners = []; 
-                bannerSnap.forEach(doc => newBanners.push({ id: doc.id, ...doc.data() })); 
                 window.banners = newBanners;
-                if(!usedCache) updateProgress(95, "Finalizing...");
+                window.ads = newAds;
 
-                // SAVE FRESH DATA TO LOCAL STORAGE
                 try {
-                    const cacheObj = { dictionary: window.dictionary, categories: window.categories, books: window.books, drawerItems: window.drawerItems, banners: window.banners };
+                    const cacheObj = { dictionary: window.dictionary, categories: window.categories, books: window.books, drawerItems: window.drawerItems, banners: window.banners, ads: window.ads };
                     localStorage.setItem('app_cached_data', JSON.stringify(cacheObj));
                 } catch (e) { console.warn("Storage quota exceeded", e); }
 
                 dataLoaded = true; 
                 sessionStorage.setItem('app_loaded_session', 'true');
                 
-                // Re-render with fresh data
-                renderApp(); 
-                renderDrawer(); 
+                // Only re-render if necessary to avoid flicker
+                if(!usedCache || isDataDifferent) {
+                    renderApp(); 
+                    renderDrawer(); 
+                }
                 
                 if(!usedCache) {
-                    updateProgress(100, "Welcome!");
-                    setTimeout(() => { loader.style.opacity = '0'; setTimeout(() => { loader.style.display = 'none'; loader.style.opacity = '1'; }, 500); }, 400);
+                    updateProgress(100, "Ready!");
+                    setTimeout(() => { loader.style.opacity = '0'; setTimeout(() => { loader.style.display = 'none'; loader.style.opacity = '1'; }, 300); }, 300);
                 }
             } catch (e) { 
                 console.error("Error loading data:", e); 

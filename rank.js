@@ -1,6 +1,9 @@
 /* ==========================================
-   RANK SYSTEM CONFIGURATION (UPDATED)
+   RANK SYSTEM CONTROLLER (UPDATED FOR NEW DASHBOARD)
    ========================================== */
+
+// Configuration: 'limit' is the score required to REACH the NEXT rank
+// Example: Bronze ends at 999. At 1000, you become Silver.
 const RANK_SYSTEM = [
     { id: 'tier-bronze',   name: 'Bronze',   limit: 1000,    desc: 'Beginner (0 - 999 pts)' },
     { id: 'tier-silver',   name: 'Silver',   limit: 2000,   desc: 'Learner (1000 - 1999 pts)' },
@@ -8,102 +11,165 @@ const RANK_SYSTEM = [
     { id: 'tier-platinum', name: 'Platinum', limit: 4000,  desc: 'Professional (3000 - 3999 pts)' },
     { id: 'tier-diamond',  name: 'Diamond',  limit: 5000,  desc: 'Elite (4000 - 4999 pts)' },
     { id: 'tier-master',   name: 'Master',   limit: 6000,  desc: 'Guru (5000 - 5999 pts)' },
-    { id: 'tier-legend',   name: 'Legend',   limit: 99999, desc: 'Godlike (6000+ pts)' }
+    { id: 'tier-legend',   name: 'Legend',   limit: 999999, desc: 'Godlike (6000+ pts)' }
 ];
 
 window.renderRankScreen = (forcedScore = null) => {
-    // 1. Determine Score
+    // 1. GET CURRENT SCORE
     let score = 0;
     if (forcedScore !== null) {
         score = forcedScore;
         window.userTotalScore = forcedScore;
     } else if (typeof window.userTotalScore !== 'undefined') {
         score = window.userTotalScore;
-    } else if (typeof window.userScore !== 'undefined') {
-        score = window.userScore;
     }
 
-    const scoreDisplay = document.getElementById('userTotalScore');
-    if(scoreDisplay) scoreDisplay.innerText = score;
-
-    // 2. Render Timeline
-    const container = document.getElementById('rankTimelineContainer');
-    if (container && container.innerHTML.trim() === "") {
-        let html = "";
-        RANK_SYSTEM.forEach(rank => {
-            let svgIcon = '<i class="fas fa-medal"></i>';
-            if(window.getRankSVG) svgIcon = window.getRankSVG(rank.id);
-            html += `<div class="rank-tier locked" id="${rank.id}"><div class="tier-icon-wrapper">${svgIcon}</div><div class="tier-info"><h4>${rank.name}</h4><p>${rank.desc}</p></div></div>`;
-        });
-        container.innerHTML = html;
-    }
-    
-    // 3. Calculate Rank Index
+    // 2. DETERMINE CURRENT RANK
+    // We iterate to find the specific tier the user is currently in
     let activeIndex = 0;
-    for (let i = 0; i < RANK_SYSTEM.length - 1; i++) {
-        if (score >= RANK_SYSTEM[i].limit) activeIndex = i + 1; 
-        else break; 
+    for (let i = 0; i < RANK_SYSTEM.length; i++) {
+        // If score is less than the limit of this tier, then we are INSIDE this tier
+        if (score < RANK_SYSTEM[i].limit) {
+            activeIndex = i;
+            break;
+        }
+        // If we are at the last item and still haven't broken, we are in the last tier
+        if (i === RANK_SYSTEM.length - 1) {
+            activeIndex = i;
+        }
     }
 
     const currentRank = RANK_SYSTEM[activeIndex];
-    const nextRank = RANK_SYSTEM[activeIndex + 1];
-
-    // 4. Update Header
-    const iconBox = document.getElementById('currentRankIcon');
-    const titleBox = document.getElementById('currentRankTitle');
     
-    if(iconBox && window.getRankSVG) {
-        // Only update if changed to prevent flicker
-        if(!iconBox.getAttribute('data-rank') || iconBox.getAttribute('data-rank') !== currentRank.id) {
-            iconBox.innerHTML = window.getRankSVG(currentRank.id);
-            iconBox.setAttribute('data-rank', currentRank.id);
-            const svg = iconBox.querySelector('img'); 
-            if(svg) svg.style.animation = "rankFloat 3s ease-in-out infinite";
-        }
+    // 3. UPDATE HERO SECTION (TEXT & ICONS)
+    const titleEl = document.getElementById('rankBadgeTitle');
+    const scoreEl = document.getElementById('displayScore');
+    const heroIconEl = document.getElementById('rankHeroIcon');
+    const nextTextEl = document.getElementById('nextRankText');
+    const statRankEl = document.getElementById('statRankName');
+    const statHighEl = document.getElementById('highScoreStat');
+
+    if(titleEl) titleEl.innerText = currentRank.name;
+    if(scoreEl) scoreEl.innerText = score;
+    if(statRankEl) statRankEl.innerText = currentRank.name;
+    if(statHighEl && window.userScore) statHighEl.innerText = window.userScore;
+
+    // Inject Hero Image using rank-design.js
+    if(heroIconEl && window.getRankSVG) {
+        // Only update if innerHTML is empty or ID changed (prevents animation reset)
+        // logic: simplistic check, just overwrite for now to ensure state
+        heroIconEl.innerHTML = window.getRankSVG(currentRank.id);
     }
-    if(titleBox) titleBox.innerText = currentRank.name;
-    
-    // 5. Update Progress Bar
-    const progressBar = document.getElementById('rankProgressBar');
-    const progressText = document.getElementById('pointsToNext');
 
-    if (nextRank) {
-        const prevLimit = activeIndex === 0 ? 0 : RANK_SYSTEM[activeIndex - 1].limit;
-        const totalNeeded = nextRank.limit - prevLimit;
-        const pointsEarned = score - prevLimit;
-        // Clamp percentage between 0 and 100
-        const pct = Math.min(100, Math.max(0, (pointsEarned / totalNeeded) * 100));
+    // 4. CALCULATE CIRCULAR PROGRESS
+    let progressPercent = 0;
+    
+    // Previous tier limit (floor)
+    const prevLimit = activeIndex === 0 ? 0 : RANK_SYSTEM[activeIndex - 1].limit;
+    // Current tier limit (ceiling)
+    const nextLimit = currentRank.limit;
+
+    if (activeIndex < RANK_SYSTEM.length - 1) {
+        const pointsInTier = score - prevLimit;
+        const tierSpan = nextLimit - prevLimit;
         
-        if(progressBar) progressBar.style.width = pct + "%";
-        if(progressText) progressText.innerText = `${nextRank.limit - score} pts to ${nextRank.name}`;
+        progressPercent = (pointsInTier / tierSpan) * 100;
+        progressPercent = Math.min(100, Math.max(0, progressPercent)); // Clamp 0-100
+
+        const needed = nextLimit - score;
+        if(nextTextEl) nextTextEl.innerText = `${needed} XP to ${RANK_SYSTEM[activeIndex+1].name}`;
     } else {
-        if(progressBar) progressBar.style.width = "100%";
-        if(progressText) progressText.innerText = "Max Rank Reached";
+        // Max Rank
+        progressPercent = 100;
+        if(nextTextEl) nextTextEl.innerText = "Maximum Rank Achieved!";
     }
 
-    // 6. Update List Styles
-    RANK_SYSTEM.forEach((r, idx) => {
-        const el = document.getElementById(r.id);
-        if (!el) return; 
-        
-        el.className = "rank-tier"; 
-        const img = el.querySelector('img');
-        if(img) img.style.filter = "none"; 
+    // Update SVG Circle Stroke (circumference approx 377 for r=60)
+    const circle = document.getElementById('rankSvgProgress');
+    if(circle) {
+        const radius = circle.r.baseVal.value;
+        const circumference = 2 * Math.PI * radius; 
+        const offset = circumference - (progressPercent / 100) * circumference;
+        circle.style.strokeDashoffset = offset;
+    }
 
-        if (idx < activeIndex) {
-            el.classList.add('active'); 
-            el.style.opacity = "0.7"; 
-        } else if (idx === activeIndex) {
-            el.classList.add('active');
-            el.style.border = "2px solid var(--primary)";
-            el.style.transform = "scale(1.02)";
-            el.style.boxShadow = "0 5px 15px rgba(0,0,0,0.08)";
-            el.style.opacity = "1";
-        } else {
-            el.classList.add('locked');
-            if(img) img.style.filter = "grayscale(100%) opacity(0.5)";
+    // 5. RENDER VERTICAL JOURNEY LIST
+    const journeyContainer = document.getElementById('rankJourneyList');
+    if(journeyContainer) {
+        // Preserve the vertical line divs
+        const lines = journeyContainer.querySelectorAll('.journey-line, .journey-fill');
+        journeyContainer.innerHTML = ''; 
+        lines.forEach(l => journeyContainer.appendChild(l));
+
+        let html = "";
+        RANK_SYSTEM.forEach((rank, index) => {
+            const isUnlocked = index <= activeIndex;
+            const isActive = index === activeIndex;
+            
+            let statusClass = "locked";
+            let statusText = "Locked";
+            let pointsReq = rank.limit; 
+
+            // Logic for "Required Points" label
+            // If it's the current rank, show "Current"
+            // If passed, show the limit that was beaten
+            if (isActive) { 
+                statusClass = "active unlocked"; 
+                statusText = "Current Rank"; 
+                // Display the limit needed to finish this rank
+                pointsReq = `${rank.limit} XP Goal`; 
+            } else if (isUnlocked) { 
+                statusClass = "unlocked"; 
+                statusText = "Completed";
+                pointsReq = "Done";
+            } else {
+                pointsReq = `${rank.limit} XP`;
+            }
+
+            // Use Image from rank-design.js
+            const iconHtml = window.getRankSVG ? window.getRankSVG(rank.id) : '<i class="fas fa-lock"></i>';
+
+            html += `
+            <div class="rank-step ${statusClass}">
+                <div class="step-icon-box">
+                    ${iconHtml}
+                </div>
+                <div class="step-card">
+                    <div class="step-info">
+                        <h3>${rank.name}</h3>
+                        <span>${statusText}</span>
+                    </div>
+                    <div class="step-req">${pointsReq}</div>
+                </div>
+            </div>`;
+        });
+        
+        // Append HTML
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = html;
+        while(tempDiv.firstChild) journeyContainer.appendChild(tempDiv.firstChild);
+
+        // 6. ANIMATE VERTICAL LINE FILL
+        const fillLine = document.getElementById('journeyFillLine');
+        if(fillLine) {
+            if(RANK_SYSTEM.length > 1) {
+                // Calculate height of the fill line
+                // Base: Active Index / Total Steps
+                const stepSize = 100 / (RANK_SYSTEM.length - 1);
+                
+                // Base height (completed steps)
+                let totalHeight = activeIndex * stepSize;
+                
+                // Add the progress of the current step
+                // If we are 50% through Silver, the line should be halfway between Silver and Gold
+                if (activeIndex < RANK_SYSTEM.length - 1) {
+                    totalHeight += (progressPercent / 100) * stepSize;
+                }
+
+                fillLine.style.height = Math.min(100, totalHeight) + "%";
+            }
         }
-    });
+    }
 };
 
 /**

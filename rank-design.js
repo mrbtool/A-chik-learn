@@ -1,76 +1,63 @@
 /* ==========================================
-   RANK DESIGN: IMAGES & ANIMATIONS
+   RANK DESIGN: IMAGES & VISUALS (NEW THEME)
    ========================================== */
 
-// 1. INJECT CUSTOM CSS FOR ANIMATIONS
-const rankStyles = `
+// 1. INJECT CUSTOM CSS FOR NEW DASHBOARD
+// This ensures images fit perfectly inside the new Glassmorphic circles
+const rankVisualStyles = `
 <style>
-    /* Floating Animation for Active Rank */
+    /* --- ANIMATIONS --- */
     @keyframes rankFloat {
-        0% { transform: translateY(0px); filter: drop-shadow(0 5px 5px rgba(0,0,0,0.1)); }
-        50% { transform: translateY(-8px); filter: drop-shadow(0 15px 10px rgba(0,0,0,0.2)); }
-        100% { transform: translateY(0px); filter: drop-shadow(0 5px 5px rgba(0,0,0,0.1)); }
+        0% { transform: translateY(0px); filter: drop-shadow(0 0 15px rgba(255,255,255,0.3)); }
+        50% { transform: translateY(-8px); filter: drop-shadow(0 10px 20px rgba(255,255,255,0.5)); }
+        100% { transform: translateY(0px); filter: drop-shadow(0 0 15px rgba(255,255,255,0.3)); }
     }
 
-    /* Pulse for Progress Bar */
-    @keyframes barPulse {
-        0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
-        70% { box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
-        100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+    /* --- HERO IMAGE STYLING (Big Center Circle) --- */
+    .rank-avatar-inner img {
+        width: 75% !important;      /* Fill 75% of the glass circle */
+        height: 75% !important;
+        object-fit: contain;        /* Keep aspect ratio */
+        animation: rankFloat 3.5s ease-in-out infinite; /* Floating effect */
+        pointer-events: none;       /* Prevent dragging */
     }
 
-    /* -----------------------------------------------
-       FIX: FORCE IMAGE SIZES TO PREVENT GIANT ICONS
-       ----------------------------------------------- */
-    
-    /* 1. The Header Icon (Big one at top) */
-    .current-rank-icon img {
-        animation: rankFloat 3s ease-in-out infinite;
-        width: 100% !important;
-        height: 100% !important;
-        max-width: 120px; /* Safety cap */
-        max-height: 120px;
+    /* --- TIMELINE LIST IMAGES (Small Side Circles) --- */
+    .step-icon-box img {
+        width: 65% !important;      /* Fill 65% of the white circle */
+        height: 65% !important;
         object-fit: contain;
-    }
-
-    /* 2. The List Icons (Small ones in timeline) */
-    .tier-icon-wrapper img, 
-    .tier-icon img {
-        width: 45px !important;  /* Force small width */
-        height: 45px !important; /* Force small height */
-        object-fit: contain;     /* Keep aspect ratio */
         display: block;
     }
-    
-    /* Ensure the wrapper itself doesn't stretch */
-    .tier-icon-wrapper {
-        width: 60px;
-        height: 60px;
-        min-width: 60px; /* Prevent crushing */
-        display: flex;
-        align-items: center;
-        justify-content: center;
+
+    /* Ensure the container doesn't collapse */
+    .step-icon-box {
+        overflow: hidden; /* Clean edges */
     }
 </style>
 `;
-document.head.insertAdjacentHTML("beforeend", rankStyles);
+
+// Inject styles into Head
+document.head.insertAdjacentHTML("beforeend", rankVisualStyles);
 
 
 // 2. DEFINE IMAGE URLs
-// REPLACE THESE URLs WITH YOUR ACTUAL IMAGE LINKS
+// Ensure these IDs match the 'id' fields in your rank.js RANK_SYSTEM array
 const RANK_IMAGES = {
     'tier-bronze':   'https://raw.githubusercontent.com/mrbtool/A-chik-learn/refs/heads/main/bronze.png',
     'tier-silver':   'https://raw.githubusercontent.com/mrbtool/A-chik-learn/refs/heads/main/silver.png',
     'tier-gold':     'https://raw.githubusercontent.com/mrbtool/A-chik-learn/refs/heads/main/gold.png',
     'tier-platinum': 'https://raw.githubusercontent.com/mrbtool/A-chik-learn/refs/heads/main/platinum.png',
     'tier-diamond':  'https://raw.githubusercontent.com/mrbtool/A-chik-learn/refs/heads/main/diamond.png',
-    'tier-master': 'https://raw.githubusercontent.com/mrbtool/A-chik-learn/refs/heads/main/master.png',
-    'tier-legend':  'https://raw.githubusercontent.com/mrbtool/A-chik-learn/refs/heads/main/legend.png' 
+    'tier-master':   'https://raw.githubusercontent.com/mrbtool/A-chik-learn/refs/heads/main/master.png',
+    'tier-legend':   'https://raw.githubusercontent.com/mrbtool/A-chik-learn/refs/heads/main/legend.png' 
 };
 
-// 3. EXPORT FUNCTION
+// 3. EXPORT HELPER FUNCTION
 window.getRankSVG = (tierId) => {
+    // Default to bronze if ID not found
     const url = RANK_IMAGES[tierId] || RANK_IMAGES['tier-bronze'];
-    // Return img tag
+    
+    // Return formatted Image Tag
     return `<img src="${url}" alt="${tierId}" loading="lazy" />`;
 };
