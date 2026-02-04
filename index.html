@@ -1182,12 +1182,71 @@
             if(window.drawerItems.length > 0) { window.drawerItems.forEach(item => { const rawIcon = (item.icon || "fa-circle").trim(); let iconHtml = rawIcon.startsWith("<svg") ? rawIcon : `<i class="fas ${rawIcon}"></i>`; list.innerHTML += `<div class="menu-item" onclick="window.openDynamicPage('${item.id}')"><div class="menu-icon-wrapper">${iconHtml}</div>${item.title}</div>`; }); }
         }
     </script>
+
 <script>
-    let deferredPrompt; const installBtn = document.getElementById('installAppBtn');
-    if ('serviceWorker' in navigator) { window.addEventListener('load', () => { navigator.serviceWorker.register('./sw.js').then(reg => console.log('SW Registered')).catch(err => console.log('SW Error', err)); }); }
-    window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); deferredPrompt = e; if(installBtn) installBtn.classList.remove('hidden'); });
-    window.installPWA = async () => { if (!deferredPrompt) return; deferredPrompt.prompt(); const { outcome } = await deferredPrompt.userChoice; deferredPrompt = null; if(outcome === 'accepted'){ installBtn.classList.add('hidden'); } };
-    window.addEventListener('appinstalled', () => { if(installBtn) installBtn.classList.add('hidden'); console.log('PWA was installed'); });
+    // --- SERVICE WORKER VERSION CHECKER & PWA INSTALL ---
+    let deferredPrompt; 
+    const installBtn = document.getElementById('installAppBtn');
+
+    if ('serviceWorker' in navigator) {
+        
+        // 1. Listen for the version number coming back from sw.js
+        navigator.serviceWorker.addEventListener('message', (event) => {
+            if (event.data && event.data.type === 'VERSION_RESPONSE') {
+                const verEl = document.getElementById('appVersionDisplay');
+                // Display the version received
+                if (verEl) verEl.innerText = "Version " + event.data.version;
+            }
+        });
+
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('./sw.js').then(reg => {
+                console.log('SW Registered');
+                
+                // 2. Ask for version immediately if active
+                if (reg.active) {
+                    reg.active.postMessage({ type: 'GET_VERSION' });
+                }
+                
+                // 3. If a new version is installed, update the UI automatically
+                reg.addEventListener('updatefound', () => {
+                    const newWorker = reg.installing;
+                    newWorker.addEventListener('statechange', () => {
+                        if (newWorker.state === 'activated' && navigator.serviceWorker.controller) {
+                             navigator.serviceWorker.controller.postMessage({ type: 'GET_VERSION' });
+                        }
+                    });
+                });
+            }).catch(err => console.log('SW Error', err));
+
+            // Double check: if controller exists, ask for version
+            if (navigator.serviceWorker.controller) {
+                navigator.serviceWorker.controller.postMessage({ type: 'GET_VERSION' });
+            }
+        });
+    } else {
+        document.getElementById('appVersionDisplay').innerText = "Version: Web Mode";
+    }
+
+    // PWA INSTALL LOGIC
+    window.addEventListener('beforeinstallprompt', (e) => { 
+        e.preventDefault(); 
+        deferredPrompt = e; 
+        if(installBtn) installBtn.classList.remove('hidden'); 
+    });
+    
+    window.installPWA = async () => { 
+        if (!deferredPrompt) return; 
+        deferredPrompt.prompt(); 
+        const { outcome } = await deferredPrompt.userChoice; 
+        deferredPrompt = null; 
+        if(outcome === 'accepted'){ installBtn.classList.add('hidden'); } 
+    };
+    
+    window.addEventListener('appinstalled', () => { 
+        if(installBtn) installBtn.classList.add('hidden'); 
+        console.log('PWA was installed'); 
+    });
 </script>
 </body>
 </html>
