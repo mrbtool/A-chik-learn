@@ -1,5 +1,5 @@
 // --- sw.js ---
-const CACHE_NAME = "achik-learn-v1.0.15";
+const CACHE_NAME = "achik-learn-v1.0.12";
 
 const ASSETS = [
   "./",
@@ -8,9 +8,7 @@ const ASSETS = [
   "./rank-design.js",
   "./rank.js",
   "./navbar.js",
-  "./auth.js",
-  "https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap",
-  "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+  "./auth.js"
 ];
 
 // Install Event
@@ -18,20 +16,23 @@ self.addEventListener("install", (e) => {
   self.skipWaiting();
   e.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      console.log('Caching assets for:', CACHE_NAME);
-      return cache.addAll(ASSETS);
+      // We use map to catch errors on individual files so the whole SW doesn't fail
+      return Promise.all(
+        ASSETS.map(url => {
+          return cache.add(url).catch(err => console.warn("SW: Could not cache", url, err));
+        })
+      );
     })
   );
 });
 
-// Activate Event - Clears old caches
+// Activate Event
 self.addEventListener("activate", (e) => {
   e.waitUntil(
     caches.keys().then((keyList) => {
       return Promise.all(
         keyList.map((key) => {
           if (key !== CACHE_NAME) {
-            console.log('Removing old cache:', key);
             return caches.delete(key);
           }
         })
@@ -45,7 +46,10 @@ self.addEventListener("activate", (e) => {
 self.addEventListener("fetch", (e) => {
   e.respondWith(
     caches.match(e.request).then((response) => {
-      return response || fetch(e.request);
+      return response || fetch(e.request).catch(() => {
+          // If both fail, return nothing (prevents ERR_FAILED)
+          return new Response("Offline content not available");
+      });
     })
   );
 });
