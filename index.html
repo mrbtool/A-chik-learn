@@ -348,21 +348,88 @@
         .nav-item { display: flex; flex-direction: column; align-items: center; color: var(--text-sub); font-size: 0.75rem; gap: 5px; cursor: pointer; width: 25%; }
         .nav-item.active { color: var(--primary); }
 
-        /* AD SCREEN */
-        #ad-interstitial { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(17, 24, 39, 0.95); z-index: 99999; display: none; flex-direction: column; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(5px); }
-        #ad-interstitial.active { display: flex; }
+        /* --- FULL SCREEN AD OVERLAY --- */
+        #ad-interstitial { 
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%; 
+            background: #000000; /* Pure black background */
+            z-index: 99999; 
+            display: none; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+        }
+
+        #ad-interstitial.active { 
+            display: flex; 
+        }
         
-        .ad-container-box { width: 100%; max-width: 320px; background: white; border-radius: 12px; padding: 10px; min-height: 250px; display: flex; flex-direction: column; align-items: center; justify-content: center; box-shadow: 0 10px 25px rgba(0,0,0,0.5); margin-bottom: 20px; text-align: center; position: relative; overflow: hidden; }
+        /* Container for the Ad Content */
+        .ad-container-box { 
+            width: 100%; 
+            height: 100%; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            position: relative;
+        }
         
-        /* Full Screen Variation */
-        .ad-container-box.full-mode { width: 100%; height: 100%; max-width: none; max-height: 85vh; border-radius: 0; background: transparent; padding: 0; box-shadow: none; margin-bottom: 0; }
+        /* The Ad Image - Perfectly Centered & Contained */
+        .ad-image { 
+            width: 100%; 
+            height: 100%; 
+            object-fit: contain; /* Ensures the whole ad is visible without stretching */
+            cursor: pointer; 
+        }
         
-        .ad-image { width: 100%; height: auto; max-height: 400px; object-fit: contain; cursor: pointer; border-radius: 8px; }
-        .full-mode .ad-image { width: 100%; height: 100%; max-height: none; border-radius: 0; }
-        
-        #ad-timer-btn { position: fixed; bottom: 30px; background: rgba(0,0,0,0.5); color: white; border: 1px solid rgba(255,255,255,0.2); padding: 12px 30px; border-radius: 50px; font-weight: 600; cursor: not-allowed; transition: 0.3s; pointer-events: none; z-index: 100000; backdrop-filter: blur(4px); }
-        #ad-timer-btn.ready { background: #EF4444; color: white; border-color: #EF4444; cursor: pointer; pointer-events: auto; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4); }
-        #ad-timer-btn.ready:active { transform: scale(0.95); }
+        /* Sponsored Label Overlay */
+        .ad-sponsored-label {
+            position: absolute;
+            top: 40px;
+            left: 20px;
+            background: rgba(0,0,0,0.6);
+            color: #ccc;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        /* Countdown / Close Button */
+        #ad-timer-btn { 
+            position: absolute; 
+            bottom: 40px; 
+            right: 20px;
+            background: rgba(0,0,0,0.6); 
+            color: white; 
+            border: 1px solid rgba(255,255,255,0.3); 
+            padding: 10px 25px; 
+            border-radius: 50px; 
+            font-weight: 600; 
+            font-size: 0.9rem;
+            cursor: not-allowed; 
+            transition: all 0.3s ease; 
+            z-index: 100000; 
+            backdrop-filter: blur(4px); 
+        }
+
+        #ad-timer-btn.ready { 
+            background: white; 
+            color: black; 
+            border-color: white; 
+            cursor: pointer; 
+            pointer-events: auto; 
+            box-shadow: 0 4px 15px rgba(255, 255, 255, 0.2); 
+        }
+
+        #ad-timer-btn.ready:active { 
+            transform: scale(0.95); 
+        }
     </style>
 </head>
 <body>
@@ -587,12 +654,13 @@
     
     <div id="categorySheet" class="bottom-sheet-overlay" onclick="closeCatSheet()"><div class="bottom-sheet" onclick="event.stopPropagation()"><div class="info-header"><span id="sheetTitle">Category</span><button class="close-icon-btn" onclick="closeCatSheet()"><i class="fas fa-times"></i></button></div><div style="padding:20px; overflow-y:auto; flex:1;" id="sheetContent"></div></div></div>
 
-    <!-- DYNAMIC AD SCREEN -->
+    <!-- DYNAMIC AD SCREEN (FULL SCREEN IMMERSIVE) -->
     <div id="ad-interstitial" onclick="event.stopPropagation()">
         <div id="ad-content-wrapper" class="ad-container-box">
             <!-- Dynamic Content Injected Here -->
         </div>
-        <button id="ad-timer-btn" onclick="closeAdScreen()">Wait 5s...</button>
+        <div class="ad-sponsored-label">Sponsored Advertisement</div>
+        <button id="ad-timer-btn" onclick="closeAdScreen()">Loading...</button>
     </div>
 
 <!-- SLIDER & UI LOGIC -->
@@ -615,66 +683,64 @@
             err.style.display = 'block';
         };
 
-        // --- AD INTERSTITIAL LOGIC (DYNAMIC FROM FIREBASE) ---
+        // --- AD INTERSTITIAL LOGIC (DYNAMIC FROM FIREBASE & RANDOMIZED) ---
         let adHasShown = false;
         window.ads = [];
 
         window.triggerAdBreak = function() {
-            if (adHasShown) return;
-            
-            // Check if ads data is available
+            // 1. Check if we have ads loaded from Firebase
             if (!window.ads || window.ads.length === 0) {
-                console.log("No ads to show.");
-                // Fallback to existing logic if simple ad script exists or just return
+                console.log("Ad Logic: No ads available.");
                 return;
             }
+
+            // 2. Randomly Select an Ad
+            const randomIndex = Math.floor(Math.random() * window.ads.length);
+            const ad = window.ads[randomIndex];
 
             const adScreen = document.getElementById('ad-interstitial');
             const wrapper = document.getElementById('ad-content-wrapper');
             const btn = document.getElementById('ad-timer-btn');
             
-            // Pick a random ad
-            const ad = window.ads[Math.floor(Math.random() * window.ads.length)];
+            // 3. Inject Content
+            wrapper.innerHTML = `<img src="${ad.imageUrl}" class="ad-image" onclick="window.open('${ad.targetUrl}', '_blank')">`;
             
-            // Inject content
-            wrapper.className = 'ad-container-box'; // Reset class
-            
-            let contentHtml = `<div style="font-size:0.8rem; color:#999; margin-bottom:5px; text-align:center;">Sponsored</div>`;
-            contentHtml += `<img src="${ad.imageUrl}" class="ad-image" onclick="window.open('${ad.targetUrl}', '_blank')">`;
-            
-            // Apply layout mode
-            if (ad.layout === 'fullscreen') {
-                wrapper.classList.add('full-mode');
-            }
-            
-            wrapper.innerHTML = contentHtml;
+            // 4. Show Screen
             adScreen.classList.add('active');
             adHasShown = true;
             
-            // Countdown Logic
+            // 5. Countdown Logic (5 Seconds)
             let countdown = 5;
-            btn.innerText = `Wait ${countdown}s...`;
+            btn.innerText = `Skip in ${countdown}`;
             btn.classList.remove('ready');
             
-            const timer = setInterval(() => {
+            if(window.adTimerInterval) clearInterval(window.adTimerInterval);
+
+            window.adTimerInterval = setInterval(() => {
                 countdown--;
-                if(countdown > 0) btn.innerText = `Wait ${countdown}s...`;
-                else { 
-                    clearInterval(timer); 
-                    btn.innerText = "Close Advertisement"; 
+                if(countdown > 0) {
+                    btn.innerText = `Skip in ${countdown}`;
+                } else { 
+                    clearInterval(window.adTimerInterval); 
+                    btn.innerText = "Skip Video"; 
                     btn.classList.add('ready'); 
                 }
             }, 1000);
         };
 
-        function closeAdScreen() {
+        window.closeAdScreen = function() {
             if(document.getElementById('ad-timer-btn').classList.contains('ready')) {
                 document.getElementById('ad-interstitial').classList.remove('active');
+                setTimeout(() => { document.getElementById('ad-content-wrapper').innerHTML = ""; }, 300);
             }
-        }
+        };
         
-        // Trigger ad on first click if not shown
-        document.body.addEventListener('click', function() { if(!adHasShown) window.triggerAdBreak(); }, { once: true });
+        // Trigger ad on first click if not shown (with slight delay for better UX)
+        document.body.addEventListener('click', function() { 
+            if(!adHasShown && window.ads && window.ads.length > 0) {
+                setTimeout(() => { window.triggerAdBreak(); }, 1500);
+            } 
+        }, { once: true });
 
         // --- SLIDER ---
         let currentSlide = 0, slideInterval, totalSlides = 0;
@@ -857,7 +923,7 @@
                 let paragraphs = formattedContent.split(/\\n|\n/);
                 let finalBodyHtml = "";
                 paragraphs.forEach(para => { const text = para.trim(); if(text.length > 0) { if(text.includes('paper-separator')) { finalBodyHtml += text; } else { finalBodyHtml += `<p>${text}</p>`; } } });
-                const paperHtml = `<div class="paper-sheet"><div class="paper-title">${b.title}</div><div class="paper-desc-box"><strong>Summary:</strong> ${b.desc || "No description available."}<br><span style="font-size:0.85rem; color:#b45309; margin-top:8px; display:inline-block; font-weight:600;"><i class="far fa-clock"></i> Read Time: ${b.time || "1 min"}</span></div><div class="paper-body">${finalBodyHtml}</div><div style="text-align:center; margin-top:60px; color:#aaa; font-size:1.5rem;">~ ❦ ~</div></div>`;
+                const paperHtml = `<div class="paper-sheet"><div class="paper-title">${b.title}</div><div class="paper-desc-box"><strong>Summary:</strong> ${b.desc || "No description available."}<br><span style="font-size:0.85rem; color:#b45309; margin-top:8px; display:inline-block; font-weight:600;"><i class="fas fa-clock"></i> Read Time: ${b.time || "1 min"}</span></div><div class="paper-body">${finalBodyHtml}</div><div style="text-align:center; margin-top:60px; color:#aaa; font-size:1.5rem;">~ ❦ ~</div></div>`;
                 document.getElementById('readerBody').innerHTML = paperHtml; document.getElementById('readerModal').classList.add('open'); pushHistoryState('reader');
             }
         };
@@ -907,7 +973,30 @@
         };
         window.exitGame = () => { clearInterval(gameInterval); document.getElementById('activeGameInterface').classList.remove('active'); document.getElementById('gameHub').style.display = 'block'; };
         function startTimer() { clearInterval(gameInterval); gameInterval = setInterval(() => { timeRemaining--; const pct = (timeRemaining / 60) * 100; document.getElementById('timerBar').style.width = pct + '%'; if(timeRemaining <= 0) endGame(); }, 1000); }
-        function endGame() { clearInterval(gameInterval); if(window.saveGamePoints) { window.saveGamePoints(gameScore, currentGameMode); } const currentHigh = parseInt(document.getElementById('highScoreVal').innerText) || 0; if(gameScore > currentHigh) { document.getElementById('highScoreVal').innerText = gameScore; } appAlert("Game Over!", `You earned ${gameScore} points!`, () => { window.exitGame(); }); }
+        
+        function endGame() { 
+            clearInterval(gameInterval); 
+            
+            // Save Points
+            if(window.saveGamePoints) { window.saveGamePoints(gameScore, currentGameMode); } 
+            
+            // Update UI Score
+            const currentHigh = parseInt(document.getElementById('highScoreVal').innerText) || 0; 
+            if(gameScore > currentHigh) { document.getElementById('highScoreVal').innerText = gameScore; } 
+            
+            // Define Callback for when user clicks "OK" on the alert
+            const onGameExit = () => {
+                // 60% Chance to Trigger Ad
+                if(Math.random() < 0.6) {
+                    window.triggerAdBreak();
+                }
+                window.exitGame();
+            };
+
+            // Show Game Over Alert with the callback
+            appAlert("Game Over!", `You earned ${gameScore} points!`, onGameExit); 
+        }
+
         window.nextQuestion = () => {
             const dict = window.dictionary; if(!dict) return; const c = dict[Math.floor(Math.random() * dict.length)]; document.getElementById('quizQuestion').innerText = c.eng;
             if(currentGameMode === 'daily') { document.getElementById('gameInstruction').innerText = `Question ${currentQuestionCount + 1}/${TOTAL_DAILY_QUESTIONS}`; } else { document.getElementById('gameInstruction').innerText = "Choose the correct translation"; }
