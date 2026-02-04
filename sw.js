@@ -1,5 +1,5 @@
 // --- sw.js ---
-const CACHE_NAME = "achik-learn-v1.0.12";
+const CACHE_NAME = "achik-learn-v1.0.15";
 
 const ASSETS = [
   "./",
