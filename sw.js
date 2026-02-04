@@ -1,7 +1,7 @@
 // --- sw.js ---
 
 // 1. UPDATE VERSION HERE - This controls the UI version number
-const CACHE_NAME = "achik-learn-v1.0.12";
+const CACHE_NAME = "achik-learn-v1.0.13";
 
 const ASSETS = [
   "./",
