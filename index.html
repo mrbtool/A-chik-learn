@@ -1318,8 +1318,51 @@
         }
     </script>
 <script>
+    /**
+     * Fetches the real version number from sw.js and updates the UI
+     */
+    async function updateAppVersionFromSW() {
+        const display = document.getElementById('appVersionDisplay');
+        try {
+            const response = await fetch('sw.js');
+            if (!response.ok) throw new Error('Could not load SW');
+            const text = await response.text();
+            
+            // Search for strings like: v1.0, version: '1.2.3', cache-v2, etc.
+            const versionMatch = text.match(/v\d+\.\d+(\.\d+)?/i) || text.match(/version\s*[:=]\s*['"]([^'"]+)['"]/i) || text.match(/cache-v(\d+)/i);
+            
+            if (versionMatch) {
+                // If it's a 'v1.0' type match
+                let version = versionMatch[0];
+                // If it was the second regex group (like '1.2.3' from version: '1.2.3')
+                if (versionMatch[1] && !version.startsWith('v')) version = 'v' + versionMatch[1];
+                
+                display.innerText = "Version " + version.toUpperCase();
+            } else {
+                display.innerText = "Version 1.0.0"; // Default fallback
+            }
+        } catch (e) {
+            console.warn("Version check failed:", e);
+            display.innerText = "Version 1.0.0";
+        }
+    }
+
     let deferredPrompt; const installBtn = document.getElementById('installAppBtn');
-    if ('serviceWorker' in navigator) { window.addEventListener('load', () => { navigator.serviceWorker.register('./sw.js').then(reg => console.log('SW Registered')).catch(err => console.log('SW Error', err)); }); }
+    if ('serviceWorker' in navigator) { 
+        window.addEventListener('load', () => { 
+            navigator.serviceWorker.register('./sw.js').then(reg => {
+                console.log('SW Registered');
+                // Check version after successful registration
+                updateAppVersionFromSW();
+            }).catch(err => {
+                console.log('SW Error', err);
+                updateAppVersionFromSW(); // Attempt even if registration fails
+            }); 
+        }); 
+    } else {
+        updateAppVersionFromSW();
+    }
+
     window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); deferredPrompt = e; if(installBtn) installBtn.classList.remove('hidden'); });
     window.installPWA = async () => { if (!deferredPrompt) return; deferredPrompt.prompt(); const { outcome } = await deferredPrompt.userChoice; deferredPrompt = null; if(outcome === 'accepted'){ installBtn.classList.add('hidden'); } };
     window.addEventListener('appinstalled', () => { if(installBtn) installBtn.classList.add('hidden'); console.log('PWA was installed'); });
