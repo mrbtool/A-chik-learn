@@ -3,7 +3,26 @@
 
   <url>
     <loc>https://a-chik-learn.pages.dev/</loc>
-    <priority>1.0</priority>
+  </url>
+
+  <url>
+    <loc>https://a-chik-learn.pages.dev/about.html</loc>
+  </url>
+
+  <url>
+    <loc>https://a-chik-learn.pages.dev/faq.html</loc>
+  </url>
+
+  <url>
+    <loc>https://a-chik-learn.pages.dev/privacy.html</loc>
+  </url>
+
+  <url>
+    <loc>https://a-chik-learn.pages.dev/terms.html</loc>
+  </url>
+
+  <url>
+    <loc>https://a-chik-learn.pages.dev/online-game.html</loc>
   </url>
 
 </urlset>
