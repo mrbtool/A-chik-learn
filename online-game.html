@@ -75,12 +75,18 @@
             padding: 20px; overflow-y: auto;
             background: transparent;
         }
+        
+        /* FIX: Remove padding on Home Screen so sheet touches edges */
+        #home-screen { padding: 0; }
 
         /* HOME */
         .hero {
             flex: 1; display: flex; flex-direction: column;
             align-items: center; justify-content: center;
-            text-align: center; padding-bottom: 180px; 
+            text-align: center; 
+            /* FIX: Adjusted padding for better scrolling layout */
+            padding: 40px 20px;
+            min-height: 250px; /* Ensures logo doesn't get squashed */
         }
         .game-logo {
             font-family: 'Rajdhani', sans-serif;
@@ -91,9 +97,13 @@
             text-shadow: 0 0 30px rgba(59,130,246,0.3);
         }
 
-        /* CONTROLS */
+        /* CONTROLS SHEET - SCROLL FIX */
         .controls-sheet {
-            position: absolute; bottom: 0; left: 0; width: 100%;
+            /* FIX: Changed from absolute to relative to allow scrolling */
+            position: relative; 
+            width: 100%;
+            margin-top: auto; /* Pushes to bottom if screen is tall */
+            
             background: rgba(15, 23, 42, 0.95);
             backdrop-filter: blur(20px);
             border-top: 1px solid var(--border);
