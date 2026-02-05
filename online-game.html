@@ -75,18 +75,12 @@
             padding: 20px; overflow-y: auto;
             background: transparent;
         }
-        
-        /* FIX: Remove padding on Home Screen so sheet touches edges */
-        #home-screen { padding: 0; }
 
         /* HOME */
         .hero {
             flex: 1; display: flex; flex-direction: column;
             align-items: center; justify-content: center;
-            text-align: center; 
-            /* FIX: Adjusted padding for better scrolling layout */
-            padding: 40px 20px;
-            min-height: 250px; /* Ensures logo doesn't get squashed */
+            text-align: center; padding-bottom: 180px; 
         }
         .game-logo {
             font-family: 'Rajdhani', sans-serif;
@@ -97,13 +91,9 @@
             text-shadow: 0 0 30px rgba(59,130,246,0.3);
         }
 
-        /* CONTROLS SHEET - SCROLL FIX */
+        /* CONTROLS */
         .controls-sheet {
-            /* FIX: Changed from absolute to relative to allow scrolling */
-            position: relative; 
-            width: 100%;
-            margin-top: auto; /* Pushes to bottom if screen is tall */
-            
+            position: absolute; bottom: 0; left: 0; width: 100%;
             background: rgba(15, 23, 42, 0.95);
             backdrop-filter: blur(20px);
             border-top: 1px solid var(--border);
@@ -158,21 +148,52 @@
             font-weight: 600; cursor: pointer; font-size: 0.9rem;
         }
 
-        /* LOBBY */
-        .lobby-header { text-align: center; margin-bottom: 20px; flex-shrink: 0; }
+        /* LOBBY LAYOUT FIX */
+        #lobby-screen {
+            padding: 0 !important; /* Reset default padding */
+            overflow: hidden !important; /* Stop outer scroll */
+            display: flex; 
+            flex-direction: column;
+        }
+        .lobby-header { 
+            text-align: center; margin-bottom: 10px; flex-shrink: 0; 
+            margin-top: 20px; padding: 0 20px;
+        }
         .lobby-code { font-family: 'Rajdhani'; font-size: 2rem; font-weight: 700; color: var(--brand); letter-spacing: 4px; }
-        .teams-wrapper { flex: 1; display: flex; flex-direction: column; gap: 15px; overflow-y: auto; padding-bottom: 80px; }
+        
+        .teams-wrapper { 
+            flex: 1; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 15px; 
+            overflow-y: auto; /* Internal Scroll */
+            padding: 10px 20px 20px 20px; 
+        }
+
         .team-block { background: rgba(0,0,0,0.2); border-radius: 16px; padding: 10px; border: 1px solid var(--border); }
         .team-title { font-family: 'Rajdhani'; font-weight: 700; text-transform: uppercase; padding: 5px 10px; font-size: 0.85rem; letter-spacing: 1px; display: flex; justify-content: space-between; }
         .t-blue { color: var(--blue-team); }
         .t-red { color: var(--red-team); }
         .slots-grid { display: grid; grid-template-columns: 1fr; gap: 8px; margin-top: 10px; }
         @media (min-width: 500px) { .slots-grid { grid-template-columns: 1fr 1fr; } }
+        
         .player-card { background: var(--surface-solid); padding: 10px 15px; border-radius: 10px; display: flex; align-items: center; gap: 12px; border: 1px solid transparent; height: 60px; }
         .player-card.empty { background: transparent; border: 1px dashed var(--border); opacity: 0.5; justify-content: center; color: var(--text-sub); font-size: 0.8rem; }
         .p-avatar { width: 35px; height: 35px; border-radius: 50%; background: #334155; display: flex; align-items: center; justify-content: center; }
         .p-name { font-weight: 600; font-size: 0.9rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100px; }
-        .lobby-footer { position: absolute; bottom: 0; left: 0; width: 100%; background: var(--bg-dark); padding: 20px; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 10px; z-index: 10; }
+        
+        /* Fixed Bottom Footer */
+        .lobby-footer { 
+            position: relative; /* Not absolute */
+            width: 100%; 
+            background: var(--bg-dark); 
+            padding: 20px; 
+            border-top: 1px solid var(--border); 
+            display: flex; flex-direction: column; gap: 10px; 
+            z-index: 50; 
+            flex-shrink: 0;
+            margin-top: auto;
+        }
 
         /* GAME */
         .game-layout { display: flex; flex-direction: column; height: 100%; }
@@ -293,6 +314,7 @@
                     <div class="slots-grid" id="teamB-slots"></div>
                 </div>
             </div>
+            <!-- FOOTER IS NOW FLEX ITEM, NOT ABSOLUTE -->
             <div class="lobby-footer">
                 <div id="lobbyStatus" style="text-align:center; color:var(--text-sub); font-size:0.9rem;">Waiting...</div>
                 <button id="startBtn" class="big-btn" onclick="window.startGame()" disabled>Start Game</button>
@@ -332,7 +354,6 @@
             <h1 id="resTitle" style="font-family:'Rajdhani'; margin:0; font-size:2.5rem;">VICTORY</h1>
             <p id="resSub" style="color:var(--text-sub); margin:5px 0 15px 0;">You Won!</p>
             
-            <!-- NEW: Scoreboard List -->
             <div style="text-align:left; font-size:0.8rem; color:var(--text-sub); margin-bottom:5px; padding-left:5px;">MATCH RESULTS</div>
             <div id="finalScoreboard" class="final-list">
                 <!-- Rows injected by JS -->
@@ -356,7 +377,7 @@
         </div>
     </div>
 
-    <!-- 4. COUNTDOWN OVERLAY (HIDDEN INITIALLY) -->
+    <!-- 4. COUNTDOWN OVERLAY -->
     <div id="countOverlay" class="count-overlay hidden">
         <div id="countNum" class="count-num">3</div>
     </div>
@@ -383,7 +404,7 @@
         let timerInterval;
         let autoStartTimer = null;
         let isCountDownRunning = false;
-        let latestPlayers = []; // NEW: Store latest players for end screen
+        let latestPlayers = [];
 
         window.fullDictionary = [];
 
@@ -775,13 +796,11 @@
             const listContainer = document.getElementById('finalScoreboard');
             listContainer.innerHTML = '';
             
-            // Sort by score high -> low
             latestPlayers.sort((a,b) => b.score - a.score);
 
             latestPlayers.forEach(p => {
                 const isMe = p.uid === auth.currentUser?.uid;
-                const tmClass = p.team === 'A' ? 'tm-a' : 'tm-b'; // For border color
-                // Highlight my row
+                const tmClass = p.team === 'A' ? 'tm-a' : 'tm-b'; 
                 const bgStyle = isMe ? 'background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.2);' : '';
                 
                 const rowHTML = `
