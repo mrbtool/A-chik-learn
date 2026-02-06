@@ -1460,42 +1460,106 @@
             if(window.drawerItems.length > 0) { window.drawerItems.forEach(item => { const rawIcon = (item.icon || "fa-circle").trim(); let iconHtml = rawIcon.startsWith("<svg") ? rawIcon : `<i class="fas ${rawIcon}"></i>`; list.innerHTML += `<div class="menu-item" onclick="window.openDynamicPage('${item.id}')"><div class="menu-icon-wrapper">${iconHtml}</div>${item.title}</div>`; }); }
         }
     </script>
+    
+<!-- UPDATED SERVICE WORKER & VERSION LOGIC -->
 <script>
-    async function updateAppVersionFromSW() {
+    /**
+     * Extracts version from sw.js and handles cache clearing if version changed
+     */
+    async function syncAppVersion() {
         const display = document.getElementById('appVersionDisplay');
+        const CACHE_KEY = 'app_cached_data';
+        const VERSION_KEY = 'app_version_string';
+        
         try {
-            const response = await fetch('sw.js');
-            if (!response.ok) throw new Error('Could not load SW');
+            // Fetch sw.js with a timestamp to bypass browser cache
+            const response = await fetch('sw.js?t=' + Date.now());
+            if (!response.ok) throw new Error('Could not load sw.js');
+            
             const text = await response.text();
-            const versionMatch = text.match(/v\d+\.\d+(\.\d+)?/i) || text.match(/version\s*[:=]\s*['"]([^'"]+)['"]/i) || text.match(/cache-v(\d+)/i);
-            if (versionMatch) {
-                let version = versionMatch[0];
-                if (versionMatch[1] && !version.startsWith('v')) version = 'v' + versionMatch[1];
-                display.innerText = "Version " + version.toUpperCase();
-            } else {
-                display.innerText = "Version 1.0.0"; 
+            
+            // Matches: const VERSION = "v1.0.1" or cache-v1 etc.
+            const versionMatch = text.match(/VERSION\s*=\s*['"]([^'"]+)['"]/i) || 
+                                 text.match(/cache-v(\d+(\.\d+)*)/i) ||
+                                 text.match(/v\d+\.\d+\.\d+/i);
+
+            const newVersion = versionMatch ? (versionMatch[1] || versionMatch[0]).toUpperCase() : "1.0.0";
+            const lastVersion = localStorage.getItem(VERSION_KEY);
+
+            // Update UI
+            if (display) display.innerText = "Version " + (newVersion.startsWith('V') ? newVersion : 'V' + newVersion);
+
+            // AUTO CACHE CLEAR: If version changed, wipe dictionary/app cache
+            if (lastVersion && lastVersion !== newVersion) {
+                console.log(`Update detected: ${lastVersion} -> ${newVersion}. Purging cache...`);
+                localStorage.removeItem(CACHE_KEY);
+                // We keep the new version string update for after the SW takes control
             }
+            localStorage.setItem(VERSION_KEY, newVersion);
+
         } catch (e) {
-            display.innerText = "Version 1.0.0";
+            console.warn("Version sync failed:", e);
+            if (display) display.innerText = "Version 1.0.0";
         }
     }
 
-    let deferredPrompt; const installBtn = document.getElementById('installAppBtn');
-    if ('serviceWorker' in navigator) { 
-        window.addEventListener('load', () => { 
+    // --- SERVICE WORKER REGISTRATION ---
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
             navigator.serviceWorker.register('./sw.js').then(reg => {
-                updateAppVersionFromSW();
-            }).catch(err => {
-                updateAppVersionFromSW(); 
-            }); 
-        }); 
-    } else {
-        updateAppVersionFromSW();
+                // Check for updates automatically
+                reg.update();
+
+                reg.onupdatefound = () => {
+                    const installingWorker = reg.installing;
+                    installingWorker.onstatechange = () => {
+                        if (installingWorker.state === 'installed') {
+                            if (navigator.serviceWorker.controller) {
+                                // New worker available, tell it to activate immediately
+                                installingWorker.postMessage({ action: 'skipWaiting' });
+                            }
+                        }
+                    };
+                };
+            });
+        });
+
+        // Instant Update: Reload page when the new Service Worker takes over
+        let refreshing = false;
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+            if (!refreshing) {
+                refreshing = true;
+                window.location.reload();
+            }
+        });
     }
 
-    window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); deferredPrompt = e; if(installBtn) installBtn.classList.remove('hidden'); });
-    window.installPWA = async () => { if (!deferredPrompt) return; deferredPrompt.prompt(); const { outcome } = await deferredPrompt.userChoice; deferredPrompt = null; if(outcome === 'accepted'){ installBtn.classList.add('hidden'); } };
-    window.addEventListener('appinstalled', () => { if(installBtn) installBtn.classList.add('hidden'); });
+    // Start version sync
+    syncAppVersion();
+
+    // --- PWA INSTALLATION ---
+    let deferredPrompt; 
+    const installBtn = document.getElementById('installAppBtn');
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        if(installBtn) installBtn.classList.remove('hidden');
+    });
+
+    window.installPWA = async () => {
+        if (!deferredPrompt) return;
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        deferredPrompt = null;
+        if(outcome === 'accepted') {
+            if(installBtn) installBtn.classList.add('hidden');
+        }
+    };
+
+    window.addEventListener('appinstalled', () => {
+        if(installBtn) installBtn.classList.add('hidden');
+    });
 </script>
 </body>
 </html>
