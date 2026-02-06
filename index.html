@@ -168,6 +168,27 @@
         .w-badge { font-size: 0.65rem; font-weight: 700; padding: 4px 8px; border-radius: 6px; letter-spacing: 0.5px; flex-shrink: 0; text-transform: uppercase; }
         .bg-eng { background: #ECFDF5; color: #047857; border: 1px solid #D1FAE5; }
         .bg-garo { background: #F0F9FF; color: #0369A1; border: 1px solid #E0F2FE; }
+
+        /* --- UPDATED GRAMMAR BADGE POSITION (STACKED BELOW) --- */
+        .badge-group { 
+            display: flex; 
+            flex-direction: column; /* Stack badges vertically */
+            gap: 4px; 
+            align-items: flex-end; /* Align both to the right edge */
+            justify-content: flex-start;
+        }
+        .bg-grammar { 
+            background: #F3F4F6 !important; 
+            color: #4F46E5 !important; 
+            border: 1px solid #E5E7EB !important; 
+            font-size: 0.6rem !important; /* Smaller size for stacked view */
+            font-weight: 700 !important; 
+            padding: 2px 6px !important; 
+            border-radius: 5px !important; 
+            white-space: nowrap; 
+            text-transform: none !important; 
+        }
+
         .w-divider { height: 1px; background: #F3F4F6; width: 100%; }
 
         /* CATEGORY LIST */
@@ -752,6 +773,14 @@
 
 <!-- SLIDER & UI LOGIC -->
     <script>
+        // --- MASTER GRAMMAR LIST ---
+        const GRAMMAR_MASTER_LIST = [
+            "Noun", "Verb", "Adjective", "Adverb", "Pronoun", "Preposition", "Conjunction", "Interjection", "Determiner", "Particle",
+            "Present Tense", "Past Tense", "Future Tense", "Present Continuous", "Past Continuous", "Future Continuous", "Simple Present",
+            "Declarative", "Interrogative", "Imperative", "Exclamatory", "Affirmative", "Negative", "Conditional", "Passive Voice", "Active Voice",
+            "State", "Age", "Action", "Location", "Time", "Possession", "Singular", "Plural", "Masculine", "Feminine", "Proper Noun"
+        ];
+
         // --- AUTH UI CONTROLS ---
         window.hideAuthScreen = () => {
             document.getElementById('auth-container').classList.add('hidden');
@@ -930,17 +959,14 @@
                 
                 // Sorting Logic: StartsWith > Includes > Others
                 const matches = window.dictionary.filter(item => {
-                    const eng = (item.eng || "").toLowerCase();
-                    const garo = (item.garo || "").toLowerCase();
+                    const eng = (item.eng || item.Eng || "").toLowerCase();
+                    const garo = (item.garo || item.Garo || "").toLowerCase();
                     return eng.includes(filter) || garo.includes(filter);
                 }).sort((a, b) => {
-                    const aEng = a.eng.toLowerCase();
-                    const bEng = b.eng.toLowerCase();
-                    const aGaro = a.garo.toLowerCase();
-                    const bGaro = b.garo.toLowerCase();
-                    
-                    const aStarts = aEng.startsWith(filter) || aGaro.startsWith(filter);
-                    const bStarts = bEng.startsWith(filter) || bGaro.startsWith(filter);
+                    const aEng = (a.eng || a.Eng || "").toLowerCase();
+                    const bEng = (b.eng || b.Eng || "").toLowerCase();
+                    const aStarts = aEng.startsWith(filter);
+                    const bStarts = bEng.startsWith(filter);
                     
                     if (aStarts && !bStarts) return -1;
                     if (!aStarts && bStarts) return 1;
@@ -949,18 +975,40 @@
 
                 if (matches.length > 0) { 
                     const displayLimit = matches.slice(0, 40); // Performance limit
-                    resultList.innerHTML = displayLimit.map(word => `
+                    resultList.innerHTML = displayLimit.map(word => {
+                        let wordEng = word.eng || word.Eng || "";
+                        let rawGaro = word.garo || word.Garo || "";
+                        let detectedGrammar = word.pos || word.grammar || ""; 
+                        let cleanGaro = rawGaro;
+
+                        const bracketMatch = rawGaro.match(/\(([^)]+)\)/);
+                        if (bracketMatch) {
+                            const content = bracketMatch[1];
+                            const isGrammar = GRAMMAR_MASTER_LIST.some(g => content.toLowerCase().includes(g.toLowerCase()));
+                            if (isGrammar) {
+                                detectedGrammar = content;
+                                cleanGaro = rawGaro.replace(bracketMatch[0], "").trim();
+                            }
+                        }
+
+                        return `
                         <div class="word-card">
                             <div class="w-row">
-                                <span class="w-text w-eng">${highlightText(word.eng, filter)}</span>
-                                <span class="w-badge bg-eng">ENG</span>
+                                <span class="w-text w-eng">${highlightText(wordEng, filter)}</span>
+                                <div class="badge-group">
+                                    <span class="w-badge bg-eng">ENG</span>
+                                </div>
                             </div>
                             <div class="w-divider"></div>
                             <div class="w-row">
-                                <span class="w-text w-garo">${highlightText(word.garo, filter)}</span>
-                                <span class="w-badge bg-garo">GARO</span>
+                                <span class="w-text w-garo">${highlightText(cleanGaro, filter)}</span>
+                                <div class="badge-group">
+                                    <span class="w-badge bg-garo">GARO</span>
+                                    ${detectedGrammar ? `<span class="w-badge bg-grammar">${detectedGrammar}</span>` : ''}
+                                </div>
                             </div>
-                        </div>`).join(''); 
+                        </div>`;
+                    }).join(''); 
                 } else { 
                     resultList.innerHTML = `
                     <div style='text-align:center; padding:40px 20px;'>
@@ -1096,11 +1144,40 @@
         window.openDynamicPage = (id) => { const item = window.drawerItems.find(x => x.id === id); if(item) { openInfoPage(item.title, item.content); closeDrawer(); } };
         window.openCatSheet = (name) => {
             document.getElementById('sheetTitle').innerText = name;
-            const words = window.dictionary.filter(w => w.cat === name);
+            const words = window.dictionary.filter(w => (w.cat || w.Cat) === name);
             let html = "";
             if(words.length) {
                 words.forEach(w => {
-                    html += `<div class="word-card"><div class="w-row"><span class="w-text w-eng">${w.eng}</span><span class="w-badge bg-eng">ENG</span></div><div class="w-divider"></div><div class="w-row"><span class="w-text w-garo">${w.garo}</span><span class="w-badge bg-garo">GARO</span></div></div>`;
+                    let wordEng = w.eng || w.Eng || "";
+                    let rawGaro = w.garo || w.Garo || "";
+                    let detectedGrammar = w.pos || w.grammar || "";
+                    let cleanGaro = rawGaro;
+
+                    const bracketMatch = rawGaro.match(/\(([^)]+)\)/);
+                    if (bracketMatch) {
+                        const content = bracketMatch[1];
+                        const isGrammar = GRAMMAR_MASTER_LIST.some(g => content.toLowerCase().includes(g.toLowerCase()));
+                        if (isGrammar) {
+                            detectedGrammar = content;
+                            cleanGaro = rawGaro.replace(bracketMatch[0], "").trim();
+                        }
+                    }
+
+                    html += `
+                    <div class="word-card">
+                        <div class="w-row">
+                            <span class="w-text w-eng">${wordEng}</span>
+                            <span class="w-badge bg-eng">ENG</span>
+                        </div>
+                        <div class="w-divider"></div>
+                        <div class="w-row">
+                            <span class="w-text w-garo">${cleanGaro}</span>
+                            <div class="badge-group">
+                                <span class="w-badge bg-garo">GARO</span>
+                                ${detectedGrammar ? `<span class="w-badge bg-grammar">${detectedGrammar}</span>` : ''}
+                            </div>
+                        </div>
+                    </div>`;
                 });
             } else {
                 html = "<p style='text-align:center; color:#888; margin-top:20px;'>No words found in this category.</p>";
@@ -1140,11 +1217,15 @@
         }
 
         window.nextQuestion = () => {
-            const dict = window.dictionary; if(!dict) return; const c = dict[Math.floor(Math.random() * dict.length)]; document.getElementById('quizQuestion').innerText = c.eng;
+            const dict = window.dictionary; if(!dict) return; 
+            const c = dict[Math.floor(Math.random() * dict.length)]; 
+            const q = c.eng || c.Eng || "";
+            const ans = c.garo || c.Garo || "";
+            document.getElementById('quizQuestion').innerText = q;
             if(currentGameMode === 'daily') { document.getElementById('gameInstruction').innerText = `Question ${currentQuestionCount + 1}/${TOTAL_DAILY_QUESTIONS}`; } else { document.getElementById('gameInstruction').innerText = "Choose the correct translation"; }
-            let opts = [c.garo]; while(opts.length < 3) { let r = dict[Math.floor(Math.random() * dict.length)]; if(!opts.includes(r.garo)) opts.push(r.garo); }
+            let opts = [ans]; while(opts.length < 3) { let r = dict[Math.floor(Math.random() * dict.length)]; let ra = r.garo || r.Garo || ""; if(!opts.includes(ra)) opts.push(ra); }
             opts.sort(() => Math.random() - 0.5);
-            let html = ""; opts.forEach(o => html += `<button class="game-btn" onclick="window.checkAns(this, '${escapeStr(o)}', '${escapeStr(c.garo)}')">${o}</button>`);
+            let html = ""; opts.forEach(o => html += `<button class="game-btn" onclick="window.checkAns(this, '${escapeStr(o)}', '${escapeStr(ans)}')">${o}</button>`);
             document.getElementById('quizOptions').innerHTML = html;
         };
         window.checkAns = (btn, ans, corr) => {
