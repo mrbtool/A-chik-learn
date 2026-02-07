@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Daily Goals Runner</title>
+    <title>Daily Goals</title>
     
     <!-- NEW FONT: 'Outfit' (Modern, clean, professional) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -217,7 +217,7 @@
     <div id="home-view" class="view-section active">
         <h1>Daily Goals</h1>
         <div class="list-wrapper" id="goal-list">
-            <div class="loading-msg">Loading your goals...</div>
+            <div class="loading-msg">Loading data...</div>
         </div>
     </div>
 
@@ -252,7 +252,7 @@
                 const querySnapshot = await getDocs(q);
 
                 if (querySnapshot.empty) {
-                    listContainer.innerHTML = '<div class="loading-msg">No goals found for today.</div>';
+                    listContainer.innerHTML = '<div class="loading-msg">No data available found for today.</div>';
                     return;
                 }
 
