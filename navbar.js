@@ -11,6 +11,11 @@ function renderNavBar() {
                 <i class="fas fa-home"></i> 
                 <span>Home</span>
             </div>
+
+            <div class="nav-item" onclick="switchTab('dailygoal', this)">
+                <i class="fas fa-calendar-day"></i> 
+                <span>Daily goal</span>
+            </div>
             
             <div class="nav-item" onclick="switchTab('books', this)">
                 <i class="fas fa-book"></i> 
