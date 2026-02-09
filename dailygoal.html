@@ -3,334 +3,416 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Daily Goals</title>
-    
-    <!-- NEW FONT: 'Outfit' (Modern, clean, professional) -->
+    <title>Daily learn</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&display=swap" rel="stylesheet">
 
-    <style>
-        /* --- GLOBAL RESETS --- */
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Outfit', sans-serif; /* Applied New Font */
-            -webkit-tap-highlight-color: transparent;
-        }
+<style>
+    /* --- GLOBAL RESETS --- */
+    * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        font-family: 'Outfit', sans-serif;
+        -webkit-tap-highlight-color: transparent;
+    }
 
-        body {
-            background-color: #eff6ff; 
-            background-image: 
-                radial-gradient(at 0% 0%, hsla(253,16%,7%,0) 0, hsla(253,16%,7%,0) 50%), 
-                radial-gradient(at 50% 0%, hsla(225,39%,30%,0) 0, hsla(225,39%,30%,0) 50%), 
-                radial-gradient(at 100% 0%, hsla(339,49%,30%,0) 0, hsla(339,49%,30%,0) 50%);
-            padding: 20px; 
-            overflow-x: hidden;
-            min-height: 100vh;
-        }
+    body {
+        background-color: #f1f5f9; 
+        background-image: 
+            radial-gradient(at 0% 0%, hsla(253,16%,7%,0) 0, hsla(253,16%,7%,0) 50%), 
+            radial-gradient(at 50% 0%, hsla(225,39%,30%,0) 0, hsla(225,39%,30%,0) 50%), 
+            radial-gradient(at 100% 0%, hsla(339,49%,30%,0) 0, hsla(339,49%,30%,0) 50%);
+        padding: 20px; 
+        overflow-x: hidden;
+        min-height: 100vh;
+        perspective: 1200px;
+        transform-style: preserve-3d;
+    }
 
-        /* --- VIEW TRANSITIONS --- */
-        .view-section {
-            display: none;
-            animation: fadeIn 0.4s cubic-bezier(0.22, 1, 0.36, 1);
-        }
+    /* --- HOME VIEW --- */
+    .view-section {
+        transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.6s;
+        backface-visibility: hidden;
+    }
+    
+    .view-section.depth-blur {
+        transform: scale(0.92) translateZ(-50px);
+        opacity: 0.5;
+        filter: blur(4px) grayscale(0.4);
+    }
+
+    h1 {
+        color: #0f172a;
+        font-size: 34px;
+        font-weight: 900; 
+        margin-bottom: 30px;
+        margin-left: 5px;
+        letter-spacing: -1px;
+        text-shadow: 2px 2px 0px rgba(255,255,255,0.5);
+    }
+
+    .list-wrapper {
+        max-width: 600px;
+        margin: 0 auto;
+        display: flex;
+        flex-direction: column;
+        gap: 20px; 
+        min-height: 50vh;
+        padding-bottom: 50px;
+    }
+
+    /* --- CARD STYLING --- */
+    .card {
+        position: relative;
+        height: 170px;
+        border-radius: 32px;
+        padding: 28px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        overflow: hidden; 
+        box-shadow: 
+            0 15px 35px -5px rgba(0, 0, 0, 0.15),
+            0 8px 10px -6px rgba(0, 0, 0, 0.1),
+            inset 0 -6px 0 rgba(0, 0, 0, 0.15),
+            inset 0 2px 0 rgba(255, 255, 255, 0.25);
+        transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+        cursor: pointer;
+        border: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .card::before {
+        content: "";
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: linear-gradient(
+            to bottom right, 
+            rgba(255,255,255,0.3) 0%, 
+            rgba(255,255,255,0.05) 40%, 
+            rgba(0,0,0,0) 50%
+        );
+        pointer-events: none;
+        z-index: 0;
+    }
+
+    .card:active {
+        transform: scale(0.96) translateY(2px);
+    }
+
+    .card-title {
+        position: relative;
+        z-index: 2; 
+        pointer-events: none;
+        color: #ffffff; 
+        font-size: clamp(19px, 4vw, 24px);
+        font-weight: 900; 
+        line-height: 1.1;
+        width: 60%;
+        word-break: break-word; 
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        text-shadow: 
+            1px 1px 0px rgba(0,0,0,0.1),
+            2px 2px 0px rgba(0,0,0,0.1),
+            0 8px 20px rgba(0,0,0,0.3);
+        margin: 0;
+    }
+
+    .illustration {
+        position: absolute;
+        right: 15px;    
+        bottom: 10px;   
+        width: 125px;   
+        height: 125px;  
+        object-fit: contain; 
+        object-position: bottom right;
+        z-index: 1;
+        pointer-events: none;
+        filter: drop-shadow(-8px 10px 12px rgba(0,0,0,0.3));
+        animation: float3D 4.5s ease-in-out infinite;
+        transform-origin: bottom center;
+    }
+    
+    @keyframes float3D {
+        0% { transform: translateY(0) rotate(0deg); }
+        50% { transform: translateY(-8px) rotate(2deg); }
+        100% { transform: translateY(0) rotate(0deg); }
+    }
+
+    .loading-msg {
+        text-align: center;
+        color: #64748b;
+        margin-top: 50px;
+        font-weight: 700;
+        background: white;
+        padding: 15px 25px;
+        border-radius: 50px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        margin-inline: auto;
+        width: fit-content;
+    }
+
+    /* --- RUNNER (Full Screen) --- */
+    #full-runner {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: #fff;
+        z-index: 9999;
         
-        .view-section.active {
-            display: block;
-        }
+        /* Start state: slightly above and faded out */
+        transform: translateY(-80px) scale(0.92); 
+        opacity: 0;
+        pointer-events: none;
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+        transform-origin: center center;
+        box-shadow: 0 25px 80px rgba(0,0,0,0.3);
+        border-radius: 0; 
+        overflow: hidden;
 
-        /* --- HEADER --- */
-        h1 {
-            color: #1e293b;
-            font-size: 32px; /* Slightly bigger header */
-            font-weight: 800;
-            margin-bottom: 25px;
-            margin-left: 5px;
-            letter-spacing: -0.5px;
-        }
+        /* Default transition for opening */
+        transition: 
+            transform 0.7s cubic-bezier(0.19, 1, 0.22, 1), 
+            opacity 0.6s ease,
+            border-radius 0.3s;
+        will-change: transform, opacity;
+    }
 
-        /* --- LIST WRAPPER --- */
-        .list-wrapper {
-            max-width: 600px;
-            margin: 0 auto;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            min-height: 50vh;
-            padding-bottom: 40px;
-        }
+    #full-runner.active {
+        transform: translateY(0) scale(1);
+        opacity: 1;
+        pointer-events: auto;
+        border-radius: 0;
+    }
 
-        /* --- CARD STYLING --- */
-        .card {
-            position: relative;
-            height: 150px;
-            border-radius: 24px;
-            padding: 24px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center; /* Vertically Center Text */
-            overflow: hidden; 
-            
-            box-shadow: 
-                0 10px 15px -3px rgba(0, 0, 0, 0.1), 
-                0 4px 6px -2px rgba(0, 0, 0, 0.05),
-                inset 0 0 0 1px rgba(255,255,255,0.25);
-            
-            transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
-            cursor: pointer;
-            color: #1e293b; 
-            perspective: 1000px;
-        }
+    #full-runner.dragging {
+        transition: none !important;
+        border-radius: 28px;
+    }
 
-        /* Glass Overlay for readability */
-        .card::before {
-            content: "";
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(120deg, rgba(255,255,255,0.35), rgba(255,255,255,0.1));
-            z-index: 0;
-        }
+    #touch-zone {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 20%; 
+        z-index: 10001;
+        background: transparent; 
+    }
 
-        .card:active {
-            transform: scale(0.96);
-        }
+    #runner-frame {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        border: none;
+        z-index: 10000;
+    }
 
-        /* --- TITLE STYLING (The Fix) --- */
-        .card-title {
-            position: relative;
-            z-index: 2; 
-            pointer-events: none;
-            color: #0f172a; 
-            
-            /* Responsive Sizing: Min 18px, Max 26px, scales with screen width */
-            font-size: clamp(20px, 7vw, 20px);
-            font-weight: 800;
-            line-height: 1.15;
-            
-            /* --- SAFETY & WRAPPING LOGIC --- */
-            width: 65%; /* Only take up 65% width to leave room for image */
-            
-            /* Forces long strings without spaces to break */
-            word-break: break-word; 
-            overflow-wrap: break-word;
-            hyphens: auto;
-
-            /* Limit to 3 lines max to prevent overflow */
-            display: -webkit-box;
-            -webkit-line-clamp: 3;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-
-            /* Text Shadow for better contrast */
-            text-shadow: 0 1px 0 rgba(255,255,255,0.3);
-            
-            margin: 0; /* Remove default margins for better centering */
-        }
-
-        /* --- IMAGE ANIMATION --- */
-        @keyframes float3D {
-            0% { transform: translateY(0) scale(1); }
-            50% { transform: translateY(-6px) scale(1.04); } 
-            100% { transform: translateY(0) scale(1); }
-        }
-
-        .illustration {
-            position: absolute;
-            right: 10px;
-            bottom: 5px;
-            width: 130px; 
-            height: 130px;
-            object-fit: contain; 
-            object-position: bottom right;
-            z-index: 1;
-            pointer-events: none;
-            filter: drop-shadow(0 12px 12px rgba(0,0,0,0.2));
-            
-            animation-name: float3D; 
-            animation-iteration-count: infinite;
-            animation-timing-function: ease-in-out;
-            will-change: transform;
-        }
-        
-        .card:active .illustration {
-            animation: none;
-            transform: scale(0.95);
-            transition: transform 0.2s ease;
-        }
-
-        /* --- LOADING STATE --- */
-        .loading-msg {
-            text-align: center;
-            color: #64748b;
-            margin-top: 50px;
-            font-weight: 600;
-            background: white;
-            padding: 15px 25px;
-            border-radius: 50px;
-            width: fit-content;
-            margin-left: auto;
-            margin-right: auto;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-        }
-
-        /* --- FULL SCREEN RUNNER --- */
-        #full-runner {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            background: #fff;
-            z-index: 9999;
-            display: none; 
-            animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-
-        @keyframes slideUp {
-            from { transform: translateY(100%); }
-            to { transform: translateY(0); }
-        }
-
-        .runner-header {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 5px;
-            background: linear-gradient(to right, #2563EB, #9333ea);
-            z-index: 10000;
-        }
-
-        #runner-frame { width: 100%; height: 100%; border: none; }
-
-    </style>
+</style>
 </head>
 <body>
 
-    <div id="home-view" class="view-section active">
-        <h1>Daily Goals</h1>
-        <div class="list-wrapper" id="goal-list">
-            <div class="loading-msg">Loading data...</div>
-        </div>
+<div id="home-view" class="view-section">
+    <h1>Daily Learn</h1>
+    <div class="list-wrapper" id="goal-list">
+        <div class="loading-msg">Summoning Mascots...</div>
     </div>
+</div>
 
-    <div id="full-runner">
-        <div class="runner-header"></div>
-        <iframe id="runner-frame"></iframe>
-    </div>
+<!-- RUNNER WRAPPER -->
+<div id="full-runner">
+    <div id="touch-zone"></div>
+    <iframe id="runner-frame"></iframe>
+</div>
 
-    <!-- FIREBASE MODULE -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, collection, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+<!-- FIREBASE & LOGIC -->
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getFirestore, collection, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyCGqzSqonv0THJ33BEZbO5PJhaHd8I-IQg",
-            authDomain: "a-chik-learn.firebaseapp.com",
-            projectId: "a-chik-learn",
-            storageBucket: "a-chik-learn.firebasestorage.app",
-            messagingSenderId: "960876567489",
-            appId: "1:960876567489:web:13f34adb81759a88ed6d40",
-            measurementId: "G-97YK0CPMXL"
-        };
+    const firebaseConfig = {
+        apiKey: "AIzaSyCGqzSqonv0THJ33BEZbO5PJhaHd8I-IQg",
+        authDomain: "a-chik-learn.firebaseapp.com",
+        projectId: "a-chik-learn",
+        storageBucket: "a-chik-learn.firebasestorage.app",
+        messagingSenderId: "960876567489",
+        appId: "1:960876567489:web:13f34adb81759a88ed6d40",
+        measurementId: "G-97YK0CPMXL"
+    };
 
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
 
-        async function fetchGoals() {
-            const listContainer = document.getElementById('goal-list');
-            
-            try {
-                const q = query(collection(db, "daily_goals"), orderBy("createdAt", "desc"));
-                const querySnapshot = await getDocs(q);
+    // --- FETCH GOALS ---
+    async function fetchGoals() {
+        const listContainer = document.getElementById('goal-list');
+        try {
+            const q = query(collection(db, "daily_goals"), orderBy("createdAt", "desc"));
+            const querySnapshot = await getDocs(q);
 
-                if (querySnapshot.empty) {
-                    listContainer.innerHTML = '<div class="loading-msg">No data available found for today.</div>';
-                    return;
-                }
-
-                listContainer.innerHTML = '';
-                querySnapshot.forEach((doc, index) => {
-                    const item = doc.data();
-                    createCard(item, index, listContainer);
-                });
-
-            } catch (error) {
-                console.error("Error:", error);
-                listContainer.innerHTML = '<div class="loading-msg" style="color:#ef4444">Error loading data.</div>';
-            }
-        }
-
-        function createCard(item, index, container) {
-            const card = document.createElement('div');
-            card.className = 'card';
-            
-            const bgColor = item.color || '#3b82f6'; 
-            card.style.background = bgColor;
-            card.onclick = () => runHtml(item.html);
-
-            const imgSrc = item.image || "https://cdn3d.iconscout.com/3d/premium/thumb/target-2882798-2409540.png";
-            
-            // Randomize float timing for organic feel
-            const floatDuration = (Math.random() * 2 + 3).toFixed(2);
-            const floatDelay = (Math.random() * 2).toFixed(2);
-            const entryDelay = index * 0.1;
-
-            card.innerHTML = `
-                <div class="card-title" style="animation: fadeIn 0.5s ease ${entryDelay}s forwards;">
-                    ${item.title}
-                </div>
-                <img src="${imgSrc}" class="illustration" 
-                     style="animation-duration: ${floatDuration}s; animation-delay: -${floatDelay}s;">
-            `;
-            container.appendChild(card);
-        }
-
-        window.runHtml = (htmlContent) => {
-            if (!htmlContent) {
-                alert("No content available.");
+            if (querySnapshot.empty) {
+                listContainer.innerHTML = '<div class="loading-msg">No goals today.</div>';
                 return;
             }
-            window.history.pushState({ page: 'runner' }, '', '');
-            
-            const runner = document.getElementById('full-runner');
-            const iframe = document.getElementById('runner-frame');
-            runner.style.display = 'block';
 
-            const doc = iframe.contentWindow.document;
-            doc.open();
-            doc.write(htmlContent);
-            doc.close();
+            listContainer.innerHTML = '';
+            querySnapshot.forEach((doc, index) => {
+                createCard(doc.data(), index, listContainer);
+            });
+        } catch (error) {
+            console.error(error);
+            listContainer.innerHTML = '<div class="loading-msg" style="color:#ef4444">Error loading data.</div>';
         }
+    }
 
-        window.history.replaceState({ page: 'home' }, '', '');
+    function createCard(item, index, container) {
+        const card = document.createElement('div');
+        card.className = 'card';
+        
+        const baseColor = item.color || '#3b82f6';
+        card.style.background = `linear-gradient(145deg, ${baseColor}, ${adjustColor(baseColor, -30)})`;
+        
+        card.onclick = (e) => {
+            runHtml(item.html);
+        };
 
-        window.addEventListener('popstate', (event) => {
-            const page = event.state ? event.state.page : 'home';
-            const runner = document.getElementById('full-runner');
-            const homeView = document.getElementById('home-view');
-            const iframe = document.getElementById('runner-frame');
+        const imgSrc = item.image || "https://cdn3d.iconscout.com/3d/premium/thumb/target-2882798-2409540.png";
+        const delay = index * 0.1;
 
-            runner.style.display = 'none';
-            homeView.classList.remove('active');
-            
-            if (page !== 'runner') iframe.src = 'about:blank';
+        card.innerHTML = `
+            <div class="card-title" style="animation: fadeIn 0.6s ease ${delay}s forwards;">${item.title}</div>
+            <img src="${imgSrc}" class="illustration" style="animation-delay: -${Math.random() * 3}s">
+        `;
+        container.appendChild(card);
+    }
 
-            if (page === 'runner') {
-                runner.style.display = 'block';
-            } else {
-                homeView.classList.add('active');
-            }
+    function adjustColor(color, amount) {
+        return '#' + color.replace(/^#/, '').replace(/../g, color => ('0'+Math.min(255, Math.max(0, parseInt(color, 16) + amount)).toString(16)).substr(-2));
+    }
+
+    // --- RUNNER LOGIC ---
+    const runner = document.getElementById('full-runner');
+    const touchZone = document.getElementById('touch-zone');
+    const iframe = document.getElementById('runner-frame');
+    const homeView = document.getElementById('home-view');
+
+    window.runHtml = (htmlContent) => {
+        if (!htmlContent) return alert("No content.");
+        
+        const doc = iframe.contentWindow.document;
+        doc.open();
+        doc.write(htmlContent);
+        doc.close();
+
+        // Clean slate for open animation
+        runner.style.transition = '';
+        runner.style.transform = '';
+        
+        window.history.pushState({ page: 'runner' }, '', '');
+        
+        requestAnimationFrame(() => {
+            runner.classList.add('active');
+            homeView.classList.add('depth-blur'); 
         });
+    }
 
-        fetchGoals();
-    </script>
+    window.addEventListener('popstate', () => {
+        if (runner.classList.contains('active')) {
+            closeRunner(true); 
+        }
+    });
+
+    function closeRunner(animate) {
+        homeView.classList.remove('depth-blur');
+        
+        if (animate) {
+            // SLIDE DOWN
+            // Use ease-in for a "heavy" drop feeling
+            runner.style.transition = 'transform 0.4s ease-in, opacity 0.4s ease-in';
+            runner.style.transform = 'translateY(100vh)';
+            
+            // Wait for transition to complete before resetting
+            setTimeout(resetRunner, 400); 
+        } else {
+            resetRunner();
+        }
+    }
+
+    function resetRunner() {
+        // --- KEY FIX ---
+        // 1. Immediately disable transitions so it doesn't "fly back" to the start position visually
+        runner.style.transition = 'none';
+        
+        // 2. Remove active class and clear transforms
+        runner.classList.remove('active', 'dragging');
+        runner.style.transform = ''; 
+        runner.style.opacity = ''; 
+        
+        // 3. Clear content
+        iframe.src = 'about:blank';
+        
+        // 4. Force a reflow (browser repaint) to ensure the 'none' transition applies
+        void runner.offsetWidth; 
+        
+        // 5. Clear the inline transition so the CSS class takes over next time
+        runner.style.transition = ''; 
+    }
+
+    // --- TOUCH PHYSICS ---
+    let startY = 0;
+    let isDragging = false;
+    const DRAG_THRESHOLD = 130; 
+
+    touchZone.addEventListener('touchstart', (e) => {
+        startY = e.touches[0].clientY;
+        isDragging = true;
+        runner.classList.add('dragging'); 
+    }, { passive: false });
+
+    touchZone.addEventListener('touchmove', (e) => {
+        if (!isDragging) return;
+        const y = e.touches[0].clientY;
+        const delta = y - startY;
+        if (e.cancelable) e.preventDefault();
+
+        // Drag down physics
+        if (delta > 0) {
+            const rotation = delta * -0.05; 
+            const scale = 1 - (delta * 0.0002); 
+            runner.style.transform = `translateY(${delta}px) rotateX(${rotation}deg) scale(${scale})`;
+        }
+    }, { passive: false });
+
+    const endDrag = (e) => {
+        if (!isDragging) return;
+        isDragging = false;
+        runner.classList.remove('dragging');
+        const delta = e.changedTouches[0].clientY - startY;
+
+        if (delta > DRAG_THRESHOLD) {
+            // Trigger Close (Slide Down)
+            window.history.back(); 
+        } else {
+            // Snap back
+            runner.style.transform = ''; 
+        }
+    };
+
+    touchZone.addEventListener('touchend', endDrag);
+    touchZone.addEventListener('touchcancel', endDrag);
+
+    fetchGoals();
+</script>
 </body>
 </html>
