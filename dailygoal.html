@@ -182,8 +182,7 @@
         /* Default transition for opening */
         transition: 
             transform 0.7s cubic-bezier(0.19, 1, 0.22, 1), 
-            opacity 0.6s ease,
-            border-radius 0.3s;
+            opacity 0.6s ease;
         will-change: transform, opacity;
     }
 
@@ -191,22 +190,6 @@
         transform: translateY(0) scale(1);
         opacity: 1;
         pointer-events: auto;
-        border-radius: 0;
-    }
-
-    #full-runner.dragging {
-        transition: none !important;
-        border-radius: 28px;
-    }
-
-    #touch-zone {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 20%; 
-        z-index: 10001;
-        background: transparent; 
     }
 
     #runner-frame {
@@ -232,7 +215,6 @@
 
 <!-- RUNNER WRAPPER -->
 <div id="full-runner">
-    <div id="touch-zone"></div>
     <iframe id="runner-frame"></iframe>
 </div>
 
@@ -303,7 +285,6 @@
 
     // --- RUNNER LOGIC ---
     const runner = document.getElementById('full-runner');
-    const touchZone = document.getElementById('touch-zone');
     const iframe = document.getElementById('runner-frame');
     const homeView = document.getElementById('home-view');
 
@@ -319,6 +300,7 @@
         runner.style.transition = '';
         runner.style.transform = '';
         
+        // Add history state so back button works
         window.history.pushState({ page: 'runner' }, '', '');
         
         requestAnimationFrame(() => {
@@ -327,6 +309,7 @@
         });
     }
 
+    // Handle Device Back Button
     window.addEventListener('popstate', () => {
         if (runner.classList.contains('active')) {
             closeRunner(true); 
@@ -337,8 +320,7 @@
         homeView.classList.remove('depth-blur');
         
         if (animate) {
-            // SLIDE DOWN
-            // Use ease-in for a "heavy" drop feeling
+            // SLIDE DOWN Animation on close
             runner.style.transition = 'transform 0.4s ease-in, opacity 0.4s ease-in';
             runner.style.transform = 'translateY(100vh)';
             
@@ -350,67 +332,23 @@
     }
 
     function resetRunner() {
-        // --- KEY FIX ---
-        // 1. Immediately disable transitions so it doesn't "fly back" to the start position visually
+        // 1. Immediately disable transitions
         runner.style.transition = 'none';
         
         // 2. Remove active class and clear transforms
-        runner.classList.remove('active', 'dragging');
+        runner.classList.remove('active');
         runner.style.transform = ''; 
         runner.style.opacity = ''; 
         
         // 3. Clear content
         iframe.src = 'about:blank';
         
-        // 4. Force a reflow (browser repaint) to ensure the 'none' transition applies
+        // 4. Force a reflow
         void runner.offsetWidth; 
         
-        // 5. Clear the inline transition so the CSS class takes over next time
+        // 5. Clear inline transition
         runner.style.transition = ''; 
     }
-
-    // --- TOUCH PHYSICS ---
-    let startY = 0;
-    let isDragging = false;
-    const DRAG_THRESHOLD = 130; 
-
-    touchZone.addEventListener('touchstart', (e) => {
-        startY = e.touches[0].clientY;
-        isDragging = true;
-        runner.classList.add('dragging'); 
-    }, { passive: false });
-
-    touchZone.addEventListener('touchmove', (e) => {
-        if (!isDragging) return;
-        const y = e.touches[0].clientY;
-        const delta = y - startY;
-        if (e.cancelable) e.preventDefault();
-
-        // Drag down physics
-        if (delta > 0) {
-            const rotation = delta * -0.05; 
-            const scale = 1 - (delta * 0.0002); 
-            runner.style.transform = `translateY(${delta}px) rotateX(${rotation}deg) scale(${scale})`;
-        }
-    }, { passive: false });
-
-    const endDrag = (e) => {
-        if (!isDragging) return;
-        isDragging = false;
-        runner.classList.remove('dragging');
-        const delta = e.changedTouches[0].clientY - startY;
-
-        if (delta > DRAG_THRESHOLD) {
-            // Trigger Close (Slide Down)
-            window.history.back(); 
-        } else {
-            // Snap back
-            runner.style.transform = ''; 
-        }
-    };
-
-    touchZone.addEventListener('touchend', endDrag);
-    touchZone.addEventListener('touchcancel', endDrag);
 
     fetchGoals();
 </script>
