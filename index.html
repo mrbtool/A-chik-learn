@@ -347,8 +347,12 @@
         /* LEADERBOARD MODAL */
         .lb-modal-card { background: #111827; width: 100%; max-width: 380px; max-height: 70vh; border-radius: 20px; padding: 0; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.5); border: 1px solid #374151; transform: scale(0.9); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
         .custom-alert-overlay.open .lb-modal-card { transform: scale(1); }
-        #leaderboard-ui { padding: 15px; flex: 1; overflow-y: auto; display: flex; flex-direction: column; color: white; font-family: 'Inter', sans-serif; scrollbar-width: none; }
-        #leaderboard-ui::-webkit-scrollbar { display: none; }
+        
+        /* THE CRITICAL FIX: Make the wrapper injected by JS flex properly */
+        #leaderboardContent { display: flex; flex-direction: column; flex: 1; overflow: hidden; }
+        
+        #leaderboard-ui { padding: 15px; flex: 1; overflow: hidden; display: flex; flex-direction: column; color: white; font-family: 'Inter', sans-serif; }
+        
         .lb-page-header { text-align: center; font-size: 1rem; font-weight: 800; margin-bottom: 12px; letter-spacing: 1px; display: flex; align-items: center; justify-content: center; gap: 6px; text-transform: uppercase; }
         .lb-tabs { display: flex; background: #1F2937; padding: 3px; border-radius: 10px; margin-bottom: 15px; flex-shrink: 0; }
         .lb-tab { flex: 1; text-align: center; padding: 6px 0; font-size: 0.7rem; color: #9CA3AF; font-weight: 600; border-radius: 7px; cursor: pointer; transition: 0.2s; }
@@ -361,8 +365,12 @@
         .banner-stat { z-index: 2; text-align: center; }
         .banner-label { font-size: 0.6rem; opacity: 0.8; text-transform: uppercase; margin-bottom: 0; }
         .banner-value { font-size: 0.95rem; font-weight: 800; }
-        .lb-scroll-list { display: flex; flex-direction: column; gap: 8px; padding-bottom: 5px; }
-        .lb-card { background: #FFFFFF; border-radius: 12px; padding: 8px 12px; display: flex; align-items: center; justify-content: space-between; color: #1F2937; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border: 2px solid transparent; height: 50px; }
+        
+        .lb-scroll-list { display: flex; flex-direction: column; gap: 8px; padding-bottom: 5px; flex: 1; overflow-y: auto; scrollbar-width: none; }
+        .lb-scroll-list::-webkit-scrollbar { display: none; }
+        
+        /* Flex-shrink: 0 prevents the cards from squishing together instead of triggering the scroll! */
+        .lb-card { background: #FFFFFF; border-radius: 12px; padding: 8px 12px; display: flex; align-items: center; justify-content: space-between; color: #1F2937; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border: 2px solid transparent; min-height: 50px; flex-shrink: 0; }
         .lb-card.rank-1 { background: linear-gradient(to right, #FFFBEB, #FFFFFF); border-color: #F59E0B; }
         .lb-card.rank-1 .lb-pos { background: #F59E0B; color: white; }
         .lb-card.rank-2 .lb-pos { background: #9CA3AF; color: white; }
@@ -372,7 +380,7 @@
         .lb-img { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; border: 1px solid #E5E7EB; }
         .lb-username { font-weight: 700; font-size: 0.85rem; color: #111827; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100px; }
         .lb-points { font-weight: 800; font-size: 0.9rem; color: #111827; }
-        .lb-close-btn { background: #1F2937; border: none; border-top: 1px solid #374151; color: #9CA3AF; padding: 15px; font-weight: 600; cursor: pointer; text-transform: uppercase; font-size: 0.85rem; }
+        .lb-close-btn { background: #1F2937; border: none; border-top: 1px solid #374151; color: #9CA3AF; padding: 15px; font-weight: 600; cursor: pointer; text-transform: uppercase; font-size: 0.85rem; flex-shrink: 0; }
         .lb-close-btn:active { background: #111827; }
 
         /* --- Utilities --- */
@@ -783,7 +791,7 @@
 <!-- SLIDER & UI LOGIC -->
     <script>
         // --- MASTER GRAMMAR LIST ---
-        const GRAMMAR_MASTER_LIST = [
+        const GRAMMAR_MASTER_LIST =[
             "Noun", "Verb", "Adjective", "Adverb", "Pronoun", "Preposition", "Conjunction", "Interjection", "Determiner", "Particle",
             "Present Tense", "Past Tense", "Future Tense", "Present Continuous", "Past Continuous", "Future Continuous", "Simple Present",
             "Declarative", "Interrogative", "Imperative", "Exclamatory", "Affirmative", "Negative", "Conditional", "Passive Voice", "Active Voice",
@@ -806,7 +814,7 @@
 
         // --- AD INTERSTITIAL LOGIC ---
         let adHasShown = false;
-        window.ads = [];
+        window.ads =[];
 
         window.triggerAdBreak = function() {
             if (!window.ads || window.ads.length === 0) return;
@@ -903,7 +911,7 @@
             const wrapper = document.getElementById('sliderWrapper');
             const dotsContainer = document.getElementById('sliderDots');
             
-            const validBanners = (window.banners || []).filter(b => b.imageUrl && b.imageUrl.trim() !== "");
+            const validBanners = (window.banners ||[]).filter(b => b.imageUrl && b.imageUrl.trim() !== "");
             
             if(validBanners.length === 0) { container.style.display = 'none'; return; } 
             else { container.style.display = 'block'; }
@@ -1261,13 +1269,13 @@
         window.refreshLeaderboard = loadLeaderboard;
 
         window.history.replaceState({ view: 'home' }, "Home", "#home");
-        window.dictionary = []; window.categories = []; window.books = []; window.drawerItems = []; window.banners = []; window.userScore = 0; window.userTotalScore = 0;
+        window.dictionary =[]; window.categories = []; window.books = []; window.drawerItems = []; window.banners =[]; window.userScore = 0; window.userTotalScore = 0;
         let dataLoaded = false, isCategoryExpanded = false; 
         window.currentUser = null;
 
         window.toggleAllCategories = () => { isCategoryExpanded = !isCategoryExpanded; renderCategories(); };
         function renderCategories() {
-            const grid = document.getElementById('categoryGrid'); const btn = document.getElementById('catViewAllBtn'); const allCats = window.categories || []; const PREVIEW_LIMIT = 5;
+            const grid = document.getElementById('categoryGrid'); const btn = document.getElementById('catViewAllBtn'); const allCats = window.categories ||[]; const PREVIEW_LIMIT = 5;
             grid.innerHTML = ""; if(allCats.length === 0) { grid.innerHTML = "<p>No categories found.</p>"; btn.style.display = 'none'; return; }
             if(allCats.length <= PREVIEW_LIMIT) { btn.style.display = 'none'; isCategoryExpanded = true; } else { btn.style.display = 'block'; btn.innerText = isCategoryExpanded ? "Show Less" : "View All"; }
             const dataToShow = isCategoryExpanded ? allCats : allCats.slice(0, PREVIEW_LIMIT);
@@ -1385,10 +1393,10 @@
                     if (parsed.dictionary && parsed.dictionary.length > 0) {
                         window.dictionary = parsed.dictionary;
                         window.categories = parsed.categories || [];
-                        window.books = parsed.books || [];
+                        window.books = parsed.books ||[];
                         window.drawerItems = parsed.drawerItems || [];
-                        window.banners = parsed.banners || [];
-                        window.ads = parsed.ads || [];
+                        window.banners = parsed.banners ||[];
+                        window.ads = parsed.ads ||[];
                         
                         dataLoaded = true;
                         usedCache = true;
@@ -1416,12 +1424,12 @@
 
                 if(!usedCache) updateProgress(60, "Processing Data...");
 
-                const newCategories = []; catSnap.forEach(doc => newCategories.push({ id: doc.id, ...doc.data() })); 
-                const newDictionary = []; wordSnap.forEach(doc => newDictionary.push({ id: doc.id, ...doc.data() })); 
-                const newBooks = []; bookSnap.forEach(doc => newBooks.push({ id: doc.id, ...doc.data() })); 
-                const newDrawerItems = []; drawerSnap.forEach(doc => newDrawerItems.push({ id: doc.id, ...doc.data() })); 
-                const newBanners = []; bannerSnap.forEach(doc => newBanners.push({ id: doc.id, ...doc.data() })); 
-                const newAds = []; adSnap.forEach(doc => { const d = doc.data(); if(d.active) newAds.push({ id: doc.id, ...d }); });
+                const newCategories =[]; catSnap.forEach(doc => newCategories.push({ id: doc.id, ...doc.data() })); 
+                const newDictionary =[]; wordSnap.forEach(doc => newDictionary.push({ id: doc.id, ...doc.data() })); 
+                const newBooks =[]; bookSnap.forEach(doc => newBooks.push({ id: doc.id, ...doc.data() })); 
+                const newDrawerItems =[]; drawerSnap.forEach(doc => newDrawerItems.push({ id: doc.id, ...doc.data() })); 
+                const newBanners =[]; bannerSnap.forEach(doc => newBanners.push({ id: doc.id, ...doc.data() })); 
+                const newAds =[]; adSnap.forEach(doc => { const d = doc.data(); if(d.active) newAds.push({ id: doc.id, ...d }); });
 
                 const isDataDifferent = (window.dictionary.length !== newDictionary.length) || (window.banners.length !== newBanners.length);
 
