@@ -10,8 +10,8 @@
     <meta charset="UTF-8">
     <meta name="google-site-verification" content="AHmfiQDVId7bMERQovPKNrMrR1TcUU60aodIkaMx6Fg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Achik Learn – Free Garo Learning App, Quiz & Games</title>
-    <meta name="description" content="Achik Learn is a free Garo learning app with quizzes, games, vocabulary and lessons. Learn English–Garo easily on mobile.">
+    <title>Achik Learn – Free Garo & Khasi Learning App</title>
+    <meta name="description" content="Achik Learn is a free trilingual learning app with quizzes, games, and vocabulary. Learn English, Garo, and Khasi easily on mobile.">
     
     <script type="application/ld+json">
 {
@@ -165,9 +165,11 @@
         .w-text { flex: 1; word-wrap: break-word; line-height: 1.3; }
         .w-eng { font-size: 1.05rem; font-weight: 700; color: var(--text-main); }
         .w-garo { font-size: 0.95rem; font-weight: 600; color: var(--primary); }
+        .w-khasi { font-size: 0.95rem; font-weight: 600; color: #C2410C; }
         .w-badge { font-size: 0.65rem; font-weight: 700; padding: 4px 8px; border-radius: 6px; letter-spacing: 0.5px; flex-shrink: 0; text-transform: uppercase; }
         .bg-eng { background: #ECFDF5; color: #047857; border: 1px solid #D1FAE5; }
         .bg-garo { background: #F0F9FF; color: #0369A1; border: 1px solid #E0F2FE; }
+        .bg-khasi { background: #FFF7ED; color: #C2410C; border: 1px solid #FFEDD5; }
 
         /* --- UPDATED GRAMMAR BADGE POSITION (STACKED BELOW) --- */
         .badge-group { 
@@ -578,7 +580,7 @@
             <div id="home-view" class="view-section active">
                 <div class="search-container">
                     <i class="fas fa-search search-icon"></i>
-                    <input type="text" class="search-input" id="searchInput" placeholder="Search English or Garo..." onkeyup="searchDictionary()">
+                    <input type="text" class="search-input" id="searchInput" placeholder="Search Eng, Garo, or Khasi..." onkeyup="searchDictionary()">
                     <i class="fas fa-times-circle" id="clearSearch" onclick="clearSearch()"></i>
                 </div>
                 <div id="searchResults" style="display: none;">
@@ -978,7 +980,8 @@
                 const matches = window.dictionary.filter(item => {
                     const eng = (item.eng || item.Eng || "").toLowerCase();
                     const garo = (item.garo || item.Garo || "").toLowerCase();
-                    return eng.includes(filter) || garo.includes(filter);
+                    const khasi = (item.khasi || item.Khasi || "").toLowerCase();
+                    return eng.includes(filter) || garo.includes(filter) || khasi.includes(filter);
                 }).sort((a, b) => {
                     const aEng = (a.eng || a.Eng || "").toLowerCase();
                     const bEng = (b.eng || b.Eng || "").toLowerCase();
@@ -995,8 +998,10 @@
                     resultList.innerHTML = displayLimit.map(word => {
                         let wordEng = word.eng || word.Eng || "";
                         let rawGaro = word.garo || word.Garo || "";
+                        let rawKhasi = word.khasi || word.Khasi || "";
                         let detectedGrammar = word.pos || word.grammar || ""; 
                         let cleanGaro = rawGaro;
+                        let cleanKhasi = rawKhasi;
 
                         const bracketMatch = rawGaro.match(/\(([^)]+)\)/);
                         if (bracketMatch) {
@@ -1024,6 +1029,14 @@
                                     ${detectedGrammar ? `<span class="w-badge bg-grammar">${detectedGrammar}</span>` : ''}
                                 </div>
                             </div>
+                            ${cleanKhasi ? `
+                            <div class="w-divider"></div>
+                            <div class="w-row">
+                                <span class="w-text w-khasi">${highlightText(cleanKhasi, filter)}</span>
+                                <div class="badge-group">
+                                    <span class="w-badge bg-khasi">KHASI</span>
+                                </div>
+                            </div>` : ''}
                         </div>`;
                     }).join(''); 
                 } else { 
@@ -1059,7 +1072,7 @@
             document.getElementById('customAlertModal').classList.add('open');
         }
         function closeAppAlert() { document.getElementById('customAlertModal').classList.remove('open'); }
-        const APP_URL = window.location.href; const SHARE_MSG = "Check out A·chik Learn! The best app to learn English-Garo vocabulary.";
+        const APP_URL = window.location.href; const SHARE_MSG = "Check out A·chik Learn! The best app to learn English, Garo, and Khasi vocabulary.";
         function openShareModal() { closeDrawer(); pushHistoryState('share'); if (navigator.share) { navigator.share({ title: 'A·chik Learn', text: SHARE_MSG, url: APP_URL }).catch(console.error); } else { document.getElementById('shareModal').classList.add('open'); } }
         function closeShareModal() { document.getElementById('shareModal').classList.remove('open'); }
         function shareTo(platform) { let url = ''; const text = encodeURIComponent(SHARE_MSG); const link = encodeURIComponent(APP_URL); switch(platform) { case 'whatsapp': url = `https://api.whatsapp.com/send?text=${text}%20${link}`; break; case 'facebook': url = `https://www.facebook.com/sharer/sharer.php?u=${link}`; break; case 'twitter': url = `https://twitter.com/intent/tweet?text=${text}&url=${link}`; break; } if(url) window.open(url, '_blank'); closeShareModal(); }
@@ -1167,8 +1180,10 @@
                 words.forEach(w => {
                     let wordEng = w.eng || w.Eng || "";
                     let rawGaro = w.garo || w.Garo || "";
+                    let rawKhasi = w.khasi || w.Khasi || "";
                     let detectedGrammar = w.pos || w.grammar || "";
                     let cleanGaro = rawGaro;
+                    let cleanKhasi = rawKhasi;
 
                     const bracketMatch = rawGaro.match(/\(([^)]+)\)/);
                     if (bracketMatch) {
@@ -1194,6 +1209,12 @@
                                 ${detectedGrammar ? `<span class="w-badge bg-grammar">${detectedGrammar}</span>` : ''}
                             </div>
                         </div>
+                        ${cleanKhasi ? `
+                        <div class="w-divider"></div>
+                        <div class="w-row">
+                            <span class="w-text w-khasi">${cleanKhasi}</span>
+                            <span class="w-badge bg-khasi">KHASI</span>
+                        </div>` : ''}
                     </div>`;
                 });
             } else {
@@ -1545,6 +1566,7 @@
         let refreshing = false;
         navigator.serviceWorker.addEventListener('controllerchange', () => {
             if (!refreshing) {
+                refreshing = true;
                 refreshing = true;
                 window.location.reload();
             }
