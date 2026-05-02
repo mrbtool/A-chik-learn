@@ -410,9 +410,10 @@
     <script type="module">
         import { db, auth } from "./auth.js";
         
+        // FIXED: Imported documentId to safely order queries without throwing an error
         import { 
             collection, query, where, getDocs, setDoc, updateDoc, doc, onSnapshot, getDoc, 
-            serverTimestamp, deleteField, deleteDoc, limit, startAfter, orderBy, getCountFromServer
+            serverTimestamp, deleteField, deleteDoc, limit, startAfter, orderBy, getCountFromServer, documentId
         } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
         
         import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
@@ -435,7 +436,7 @@
 
         window.fullDictionary =[];
 
-        // --- INIT WITH SPLASH SCREEN PROGRESS BAR ---
+        // --- INIT WITH BULLETPROOF FALLBACK ---
         async function init() {
             try {
                 const wordsRef = collection(db, "words");
@@ -449,7 +450,7 @@
                 
                 if (totalWords === 0) {
                     document.getElementById('loadingText').innerText = "No Words Found";
-                    dismissSplashScreen();
+                    finishLoading();
                     return;
                 }
 
@@ -460,9 +461,11 @@
                 while (loadedWords < totalWords) {
                     let q;
                     if (lastDoc) {
-                        q = query(wordsRef, orderBy('__name__'), startAfter(lastDoc), limit(batchSize));
+                        // FIXED: Replaced '__name__' with documentId()
+                        q = query(wordsRef, orderBy(documentId()), startAfter(lastDoc), limit(batchSize));
                     } else {
-                        q = query(wordsRef, orderBy('__name__'), limit(batchSize));
+                        // FIXED: Replaced '__name__' with documentId()
+                        q = query(wordsRef, orderBy(documentId()), limit(batchSize));
                     }
                     
                     const snap = await getDocs(q);
@@ -483,25 +486,47 @@
                     document.getElementById('loadingText').innerText = `Downloading Resources (${percent}%)...`;
                 }
                 
-                setTimeout(() => {
-                    dismissSplashScreen();
-                    document.getElementById('findMatchBtn').disabled = false;
-                    document.getElementById('createBtn').disabled = false;
-                    document.getElementById('joinBtn').disabled = false;
-                }, 600);
+                finishLoading();
 
             } catch(e) { 
-                console.error("Load error:", e); 
-                document.getElementById('loadingText').innerText = "Error Loading Data";
-                document.getElementById('progressBar').style.background = "#ef4444"; 
-                setTimeout(dismissSplashScreen, 2000); 
+                console.warn("Advanced loading failed. Running Fallback...", e); 
+                
+                // BULLETPROOF FALLBACK: If batching fails due to slow internet or database rules, safely fetch 200 items instantly.
+                try {
+                    const fallbackSnap = await getDocs(query(collection(db, "words"), limit(200)));
+                    fallbackSnap.forEach(d => {
+                        const w = d.data();
+                        if(w.eng && w.garo) window.fullDictionary.push(w);
+                    });
+                    
+                    document.getElementById('progressBar').style.width = '100%';
+                    document.getElementById('loadingText').innerText = "Loaded...";
+                    finishLoading();
+
+                } catch (fallbackError) {
+                    console.error("Total Load Error:", fallbackError);
+                    document.getElementById('loadingText').innerText = "Connection Error";
+                    document.getElementById('progressBar').style.background = "#ef4444"; 
+                    setTimeout(dismissSplashScreen, 2000); 
+                }
             }
         }
         
+        function finishLoading() {
+            setTimeout(() => {
+                dismissSplashScreen();
+                document.getElementById('findMatchBtn').disabled = false;
+                document.getElementById('createBtn').disabled = false;
+                document.getElementById('joinBtn').disabled = false;
+            }, 600);
+        }
+
         function dismissSplashScreen() {
             const splash = document.getElementById('splashScreen');
-            splash.classList.add('splash-out');
-            setTimeout(() => splash.style.display = 'none', 600);
+            if (splash) {
+                splash.classList.add('splash-out');
+                setTimeout(() => splash.style.display = 'none', 600);
+            }
         }
 
         init();
@@ -709,7 +734,7 @@
             selectedSize = data.config.size;
 
             const me = { uid: auth.currentUser.uid, name: auth.currentUser.displayName || "Player", avatar: "fas fa-user", team: newTeam, score: 0 };
-            await updateDoc(doc(db, "matches", roomId), { [`players.${auth.currentUser.uid}`]: me });
+            await updateDoc(doc(db, "matches", roomId), {[`players.${auth.currentUser.uid}`]: me });
             enterLobby(roomId, data.isPrivate);
             listenToRoom(roomId);
         }
@@ -848,7 +873,7 @@
         function renderQuestion() {
             if(currentQIndex >= questions.length) { document.getElementById('qText').innerText = "Waiting..."; document.getElementById('optionsContainer').innerHTML = ""; return; }
             const q = questions[currentQIndex]; document.getElementById('qText').innerText = q.eng;
-            let opts = [q.garo];
+            let opts =[q.garo];
             let safe = 0; while(opts.length < 4 && safe < 50) { const r = window.fullDictionary[Math.floor(Math.random()*window.fullDictionary.length)]?.garo; if(r && !opts.includes(r)) opts.push(r); safe++; }
             opts.sort(() => Math.random() - 0.5);
             const c = document.getElementById('optionsContainer'); c.innerHTML = "";
@@ -857,7 +882,7 @@
 
         async function handleAns(btn, sel, corr) {
             const all = document.querySelectorAll('.opt-btn'); all.forEach(b => b.disabled = true);
-            if(sel === corr) { btn.classList.add('correct'); myScore += 10; if(currentRoomId) await updateDoc(doc(db, "matches", currentRoomId), { [`players.${auth.currentUser.uid}.score`]: myScore }); }
+            if(sel === corr) { btn.classList.add('correct'); myScore += 10; if(currentRoomId) await updateDoc(doc(db, "matches", currentRoomId), {[`players.${auth.currentUser.uid}.score`]: myScore }); }
             else { btn.classList.add('wrong'); all.forEach(b => { if(b.innerText === corr) b.classList.add('correct'); }); }
             currentQIndex++; setTimeout(renderQuestion, 1000);
         }
