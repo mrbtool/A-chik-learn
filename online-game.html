@@ -459,6 +459,7 @@
         let timerInterval;
         let autoStartTimer = null;
         let isCountDownRunning = false;
+        let countDownInterval = null; // FIXED: Global countdown interval
         let latestPlayers =[];
         
         // AI BOT INTERVALS
@@ -561,7 +562,6 @@
             if (user) cleanGhostSessions(user.uid);
         });
 
-        // --- FIXED RACE CONDITION: CLEAN GHOST SESSIONS ---
         async function cleanGhostSessions(uid) {
             try {
                 const q = query(collection(db, "matches"), where("status", "==", "waiting"));
@@ -569,12 +569,9 @@
                 const now = Date.now();
                 
                 snap.forEach(async (d) => {
-                    // FIX 1: Never delete the active room the user is currently looking at
                     if (currentRoomId && d.id === currentRoomId) return; 
 
                     const data = d.data();
-                    
-                    // FIX 2: Never delete fresh rooms (Prevents background race condition from deleting a room you just created)
                     let roomAge = 0;
                     if(data.createdAt && typeof data.createdAt.toMillis === 'function') {
                         roomAge = now - data.createdAt.toMillis();
@@ -585,7 +582,6 @@
                         const roomRef = doc(db, "matches", d.id);
                         await updateDoc(roomRef, {[`players.${uid}`]: deleteField() });
                         
-                        // FIX 3: Check if ANY REAL players are left. If only Bots remain, delete the room.
                         const remainingRealPlayers = Object.entries(data.players)
                             .filter(([id, p]) => id !== uid && !p.isBot).length;
                             
@@ -643,12 +639,14 @@
             renderScreen(targetScreen);
         };
 
+        // FIXED: Replaced history.back() with direct fallback navigation
         window.handleHeaderBack = () => {
             if (currentScreen === 'home-screen') {
                 window.location.href = "index.html"; 
             } else {
                 if(currentScreen === 'lobby-screen') window.leaveCurrentRoom();
-                history.back();
+                window.cleanupMatch(true);
+                window.navigateTo('home-screen'); // GUARANTEED FALLBACK
             }
         };
 
@@ -693,7 +691,6 @@
             
             window.navigateTo('lobby-screen');
 
-            // Instant Mock UI
             const mockMe = { 
                 uid: auth.currentUser.uid, 
                 name: auth.currentUser.displayName || "Player", 
@@ -705,15 +702,13 @@
             document.getElementById('blueCount').innerText = `1/${selectedSize}`;
             document.getElementById('redCount').innerText = `0/${selectedSize}`;
 
-            // Check match type explicitly
             if (currentMatchType === 'bot') {
                 document.getElementById('lobbyStatus').innerText = "Generating Bots...";
                 document.getElementById('lobbyCode').innerText = "AI MATCH";
-                await createNewRoom(true, true); // true = private, true = isBotMatch
+                await createNewRoom(true, true); 
                 return;
             }
 
-            // Real Player mode
             document.getElementById('lobbyStatus').innerText = "Searching for real players...";
             document.getElementById('lobbyCode').innerText = "SEARCHING";
 
@@ -748,23 +743,22 @@
                 
                 if (currentScreen !== 'lobby-screen') return;
                 
-                // If no real room exists, create a fresh public one and Wait for Real Players
                 if (!joinedRoom) await createNewRoom(false, false);
 
             } catch(e) {
                 console.error("Matchmaking error:", e);
-                if (currentScreen === 'lobby-screen') history.back();
+                if (currentScreen === 'lobby-screen') window.navigateTo('home-screen'); // FIXED: Safe fallback
             }
         };
 
         window.createPrivateRoom = async () => {
             if(!auth.currentUser) return window.showAlert("Login Required", "Please login.");
-            await createNewRoom(true, false); // Create private code, Real players only
+            await createNewRoom(true, false); 
         };
 
         async function createNewRoom(isPrivate, isBotMatch) {
             const roomCode = Math.floor(100000 + Math.random() * 900000).toString();
-            currentRoomId = roomCode; // Must assign instantly!
+            currentRoomId = roomCode; 
             isHost = true;
             myTeam = 'A'; 
             const me = { uid: auth.currentUser.uid, name: auth.currentUser.displayName || "Host", avatar: "fas fa-user-astronaut", team: 'A', score: 0, isBot: false };
@@ -779,7 +773,7 @@
             };
             
             enterLobby(roomCode, isPrivate);
-            try { await setDoc(doc(db, "matches", roomCode), data); listenToRoom(roomCode); } catch(e) { history.back(); }
+            try { await setDoc(doc(db, "matches", roomCode), data); listenToRoom(roomCode); } catch(e) { window.navigateTo('home-screen'); } // FIXED: Safe fallback
         }
 
         window.confirmJoin = async () => {
@@ -799,7 +793,7 @@
             const pList = Object.values(data.players || {});
             
             if(pList.length >= data.config.size * 2) {
-                if(currentScreen === 'lobby-screen') history.back();
+                if(currentScreen === 'lobby-screen') window.navigateTo('home-screen'); // FIXED: Safe fallback
                 return window.showAlert("Room Full", "This room is full.");
             }
 
@@ -820,7 +814,6 @@
 
         function enterLobby(code, isPrivate) {
             if(currentScreen !== 'lobby-screen') window.navigateTo('lobby-screen');
-            // Show proper ID text based on match type
             if (currentMatchType === 'bot') {
                 document.getElementById('lobbyCode').innerText = "AI MATCH";
             } else {
@@ -829,6 +822,7 @@
             
             if(autoStartTimer) clearTimeout(autoStartTimer);
             autoStartTimer = null;
+            if(countDownInterval) { clearInterval(countDownInterval); countDownInterval = null; }
             isCountDownRunning = false;
             document.getElementById('countOverlay').classList.add('hidden');
         }
@@ -847,7 +841,6 @@
                 const snap = await getDoc(roomRef);
                 if(snap.exists()) {
                     const players = snap.data().players || {};
-                    // Check if 0 REAL players remain in the room. If so, destroy the bot ghost room to save memory!
                     const realPlayersCount = Object.values(players).filter(p => !p.isBot).length;
                     if(realPlayersCount === 0) await deleteDoc(roomRef);
                 }
@@ -860,7 +853,7 @@
                 if(!snap.exists()) { 
                     if(currentScreen === 'lobby-screen') { 
                         window.showAlert("Room Closed", "Host ended the room."); 
-                        history.back(); 
+                        window.navigateTo('home-screen'); // FIXED: Safe fallback
                     } 
                     return; 
                 }
@@ -881,7 +874,6 @@
                     if(players.length > 1) { startBtn.disabled = false; startBtn.innerText = "START BATTLE"; }
                     else { startBtn.disabled = true; startBtn.innerText = "WAITING PLAYERS"; }
 
-                    // --- AI BOT AUTO-FILL SYSTEM ---
                     if (data.config && data.config.botMatch && data.status === 'waiting' && players.length < totalSlots) {
                         if (!botInterval) {
                             botInterval = setInterval(async () => {
@@ -916,12 +908,11 @@
                                         await updateDoc(doc(db, "matches", currentRoomId), {[`players.${botId}`]: bot });
                                     }
                                 } catch(e) {}
-                            }, 600); // 600ms ultra-fast spawn
+                            }, 600);
                         }
                     } else {
                         if (botInterval) { clearInterval(botInterval); botInterval = null; }
                     }
-                    // ---------------------------------
                 } else {
                     startBtn.style.display = 'none';
                     if (botInterval) { clearInterval(botInterval); botInterval = null; }
@@ -939,7 +930,11 @@
                 }
 
                 if(data.status === 'active') {
+                    // FIXED: Ensure countdown completely dies when active
+                    if(countDownInterval) { clearInterval(countDownInterval); countDownInterval = null; }
+                    isCountDownRunning = false;
                     document.getElementById('countOverlay').classList.add('hidden');
+                    
                     if (currentScreen === 'lobby-screen') {
                         questions = data.questions ||[];
                         window.navigateTo('game-screen');
@@ -953,14 +948,20 @@
             });
         }
 
+        // FIXED: GO GO GO overlapping issue permanently resolved
         function runCountdownSequence() {
+            if (isCountDownRunning) return; 
             isCountDownRunning = true;
+            
             const overlay = document.getElementById('countOverlay');
             const numEl = document.getElementById('countNum');
             overlay.classList.remove('hidden');
             let count = 3;
             numEl.innerText = count;
-            const intv = setInterval(() => {
+            
+            if(countDownInterval) clearInterval(countDownInterval);
+            
+            countDownInterval = setInterval(() => {
                 count--;
                 if(count > 0) {
                     numEl.innerText = count;
@@ -968,9 +969,13 @@
                     numEl.offsetHeight; 
                     numEl.style.animation = 'countPop 0.9s cubic-bezier(0.175, 0.885, 0.32, 1.275) infinite';
                 } else {
-                    clearInterval(intv);
+                    clearInterval(countDownInterval);
+                    countDownInterval = null;
                     numEl.innerText = "GO!";
-                    if(isHost) window.startGame();
+                    
+                    setTimeout(() => {
+                        if(isHost) window.startGame();
+                    }, 400); // Tiny pause so users actually see "GO!" before screen flashes
                 }
             }, 1000);
         }
@@ -1000,7 +1005,6 @@
             if(timerInterval) clearInterval(timerInterval);
             timerInterval = setInterval(() => { timeLeft--; document.getElementById('gameTimer').innerText = timeLeft; if(timeLeft <= 0) endGameLocal(); }, 1000);
             
-            // --- AI BOT SCORING ---
             if(botScoreInterval) clearInterval(botScoreInterval);
             if(isHost) {
                 botScoreInterval = setInterval(() => {
@@ -1020,7 +1024,6 @@
                     }
                 }, 3000);
             }
-            // ----------------------
         }
 
         function renderQuestion() {
@@ -1103,6 +1106,8 @@
             if(autoStartTimer) { clearTimeout(autoStartTimer); autoStartTimer = null; }
             if(botInterval) { clearInterval(botInterval); botInterval = null; }
             if(botScoreInterval) { clearInterval(botScoreInterval); botScoreInterval = null; }
+            if(countDownInterval) { clearInterval(countDownInterval); countDownInterval = null; } // FIXED: Clears properly
+            isCountDownRunning = false;
             document.getElementById('countOverlay').classList.add('hidden');
             currentRoomId=null; 
         };
