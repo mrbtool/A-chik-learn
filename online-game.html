@@ -312,7 +312,7 @@
                     </div>
                 </div>
                 
-                <!-- PLAY BUTTONS (Disabled until Splash is done) -->
+                <!-- PLAY BUTTONS -->
                 <div class="sheet-content">
                     <button id="findMatchBtn" class="big-btn" onclick="findRandomMatch()" disabled>
                         <i class="fas fa-search" style="margin-right:8px"></i> Find Match
@@ -410,7 +410,6 @@
     <script type="module">
         import { db, auth } from "./auth.js";
         
-        // FIXED: Imported documentId to safely order queries without throwing an error
         import { 
             collection, query, where, getDocs, setDoc, updateDoc, doc, onSnapshot, getDoc, 
             serverTimestamp, deleteField, deleteDoc, limit, startAfter, orderBy, getCountFromServer, documentId
@@ -432,15 +431,18 @@
         let timerInterval;
         let autoStartTimer = null;
         let isCountDownRunning = false;
-        let latestPlayers = [];
+        let latestPlayers =[];
+        
+        // AI BOT INTERVALS
+        let botInterval = null;
+        let botScoreInterval = null;
 
         window.fullDictionary =[];
 
-        // --- INIT WITH BULLETPROOF FALLBACK ---
+        // --- INIT DATA ---
         async function init() {
             try {
                 const wordsRef = collection(db, "words");
-
                 document.getElementById('loadingText').innerText = "Calculating Data...";
                 const snapshot = await getCountFromServer(wordsRef);
                 let totalWords = snapshot.data().count;
@@ -461,10 +463,8 @@
                 while (loadedWords < totalWords) {
                     let q;
                     if (lastDoc) {
-                        // FIXED: Replaced '__name__' with documentId()
                         q = query(wordsRef, orderBy(documentId()), startAfter(lastDoc), limit(batchSize));
                     } else {
-                        // FIXED: Replaced '__name__' with documentId()
                         q = query(wordsRef, orderBy(documentId()), limit(batchSize));
                     }
                     
@@ -485,13 +485,10 @@
                     document.getElementById('progressBar').style.width = percent + '%';
                     document.getElementById('loadingText').innerText = `Downloading Resources (${percent}%)...`;
                 }
-                
                 finishLoading();
 
             } catch(e) { 
                 console.warn("Advanced loading failed. Running Fallback...", e); 
-                
-                // BULLETPROOF FALLBACK: If batching fails due to slow internet or database rules, safely fetch 200 items instantly.
                 try {
                     const fallbackSnap = await getDocs(query(collection(db, "words"), limit(200)));
                     fallbackSnap.forEach(d => {
@@ -544,7 +541,7 @@
                     const data = d.data();
                     if(data.players && data.players[uid]) {
                         const roomRef = doc(db, "matches", d.id);
-                        await updateDoc(roomRef, { [`players.${uid}`]: deleteField() });
+                        await updateDoc(roomRef, {[`players.${uid}`]: deleteField() });
                         if(Object.keys(data.players).length <= 1) {
                             await deleteDoc(roomRef);
                         }
@@ -625,7 +622,7 @@
         };
         window.closeAlert = () => document.getElementById('alertModal').classList.add('hidden');
 
-        // --- MATCHMAKING ---
+        // --- FAST MATCHMAKING ---
         window.findRandomMatch = async () => {
             if(!auth.currentUser) return window.showAlert("Login Required", "Please login to play.");
             cleanGhostSessions(auth.currentUser.uid); 
@@ -634,7 +631,7 @@
             document.getElementById('lobbyStatus').innerText = "Searching for players...";
             document.getElementById('lobbyCode').innerText = "SEARCHING";
 
-            // --- INSTANT UI UPDATE (MOCK PLAYER DISPLAY) ---
+            // Instant Mock UI
             const mockMe = { 
                 uid: auth.currentUser.uid, 
                 name: auth.currentUser.displayName || "Player", 
@@ -645,18 +642,18 @@
             renderSlots('teamB-slots',[], selectedSize);
             document.getElementById('blueCount').innerText = `1/${selectedSize}`;
             document.getElementById('redCount').innerText = `0/${selectedSize}`;
-            // -----------------------------------------------
 
             try {
+                // ADDED LIMIT(5) to drastically speed up query and save database reads!
                 const q = query(
                     collection(db, "matches"), 
                     where("status", "==", "waiting"),
                     where("isPrivate", "==", false),
-                    where("config.size", "==", selectedSize)
+                    where("config.size", "==", selectedSize),
+                    limit(5)
                 );
                 const snap = await getDocs(q);
                 
-                // SAFETY: If user clicked 'Leave' while searching, abort background logic
                 if (currentScreen !== 'lobby-screen') return;
 
                 let joinedRoom = false;
@@ -676,9 +673,7 @@
                     }
                 }
                 
-                // Final safety check before creating a new room
                 if (currentScreen !== 'lobby-screen') return;
-
                 if (!joinedRoom) await createNewRoom(false);
 
             } catch(e) {
@@ -698,7 +693,7 @@
             isHost = true;
             myTeam = 'A'; 
             const me = { uid: auth.currentUser.uid, name: auth.currentUser.displayName || "Host", avatar: "fas fa-user-astronaut", team: 'A', score: 0 };
-            const data = { status: 'waiting', isPrivate: isPrivate, createdAt: serverTimestamp(), config: { size: selectedSize }, players: { [auth.currentUser.uid]: me }, questions: generateQuestions() };
+            const data = { status: 'waiting', isPrivate: isPrivate, createdAt: serverTimestamp(), config: { size: selectedSize }, players: {[auth.currentUser.uid]: me }, questions: generateQuestions() };
             enterLobby(roomCode, isPrivate);
             try { await setDoc(doc(db, "matches", roomCode), data); listenToRoom(roomCode); } catch(e) { history.back(); }
         }
@@ -789,11 +784,56 @@
                 document.getElementById('redCount').innerText = `${players.filter(p=>p.team==='B').length}/${data.config.size}`;
 
                 const startBtn = document.getElementById('startBtn');
+                
                 if(isHost) {
                     if(players.length > 1) { startBtn.disabled = false; startBtn.innerText = "START BATTLE"; }
                     else { startBtn.disabled = true; startBtn.innerText = "WAITING PLAYERS"; }
+
+                    // --- AI BOT AUTO-FILL SYSTEM ---
+                    // If no real players join instantly, inject bots so the user doesn't get bored waiting.
+                    if (data.status === 'waiting' && !data.isPrivate && players.length < totalSlots) {
+                        if (!botInterval) {
+                            botInterval = setInterval(async () => {
+                                if (!currentRoomId || currentScreen !== 'lobby-screen') {
+                                    clearInterval(botInterval); botInterval = null; return;
+                                }
+                                const botId = 'bot_' + Math.floor(Math.random()*1000000);
+                                const names =["Alex", "Sam", "Jordan", "Taylor", "Casey", "Morgan", "Riley", "Nova", "Kai"];
+                                const avatars =["fas fa-robot", "fas fa-user-ninja", "fas fa-user-astronaut", "fas fa-ghost", "fas fa-mask"];
+                                
+                                try {
+                                    const roomSnap = await getDoc(doc(db, "matches", currentRoomId));
+                                    if(roomSnap.exists()) {
+                                        const rData = roomSnap.data();
+                                        if(rData.status !== 'waiting') { clearInterval(botInterval); botInterval=null; return; }
+                                        
+                                        const curPlayers = Object.values(rData.players || {});
+                                        if(curPlayers.length >= totalSlots) { clearInterval(botInterval); botInterval=null; return; }
+                                        
+                                        const cA = curPlayers.filter(p => p.team === 'A').length;
+                                        const cB = curPlayers.filter(p => p.team === 'B').length;
+                                        const newTeam = (cA > cB) ? 'B' : 'A';
+                                        
+                                        const bot = { 
+                                            uid: botId, 
+                                            name: names[Math.floor(Math.random()*names.length)], 
+                                            avatar: avatars[Math.floor(Math.random()*avatars.length)], 
+                                            team: newTeam, 
+                                            score: 0, 
+                                            isBot: true 
+                                        };
+                                        await updateDoc(doc(db, "matches", currentRoomId), { [`players.${botId}`]: bot });
+                                    }
+                                } catch(e) {}
+                            }, 2500); // Inject a bot every 2.5 seconds until full
+                        }
+                    } else {
+                        if (botInterval) { clearInterval(botInterval); botInterval = null; }
+                    }
+                    // ---------------------------------
                 } else {
                     startBtn.style.display = 'none';
+                    if (botInterval) { clearInterval(botInterval); botInterval = null; }
                 }
 
                 if (data.status === 'waiting' && players.length === totalSlots) {
@@ -868,6 +908,29 @@
             currentQIndex = 0; myScore = 0; timeLeft = 60; renderQuestion();
             if(timerInterval) clearInterval(timerInterval);
             timerInterval = setInterval(() => { timeLeft--; document.getElementById('gameTimer').innerText = timeLeft; if(timeLeft <= 0) endGameLocal(); }, 1000);
+            
+            // --- AI BOT SCORING ---
+            if(botScoreInterval) clearInterval(botScoreInterval);
+            if(isHost) {
+                botScoreInterval = setInterval(() => {
+                    if(!currentRoomId || currentScreen !== 'game-screen') return;
+                    let updated = false;
+                    const updates = {};
+                    latestPlayers.forEach(p => {
+                        if(p.isBot) {
+                            // Bots randomly answer correctly during the game to keep pressure on the real player
+                            if(Math.random() < 0.3) {
+                                updates[`players.${p.uid}.score`] = p.score + 10;
+                                updated = true;
+                            }
+                        }
+                    });
+                    if(updated) {
+                        updateDoc(doc(db, "matches", currentRoomId), updates).catch(()=>{});
+                    }
+                }, 3000);
+            }
+            // ----------------------
         }
 
         function renderQuestion() {
@@ -889,6 +952,8 @@
 
         function endGameLocal() {
             clearInterval(timerInterval);
+            if(botScoreInterval) { clearInterval(botScoreInterval); botScoreInterval = null; }
+            
             const sA = parseInt(document.getElementById('scoreA').innerText)||0; 
             const sB = parseInt(document.getElementById('scoreB').innerText)||0;
             
@@ -946,6 +1011,8 @@
             if(roomUnsub) { roomUnsub(); roomUnsub=null; } 
             if(timerInterval) clearInterval(timerInterval);
             if(autoStartTimer) { clearTimeout(autoStartTimer); autoStartTimer = null; }
+            if(botInterval) { clearInterval(botInterval); botInterval = null; }
+            if(botScoreInterval) { clearInterval(botScoreInterval); botScoreInterval = null; }
             document.getElementById('countOverlay').classList.add('hidden');
             currentRoomId=null; 
         };
