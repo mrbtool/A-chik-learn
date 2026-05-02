@@ -133,7 +133,7 @@
             flex: 1; display: flex; flex-direction: column;
             align-items: center; justify-content: center;
             text-align: center; 
-            padding-bottom: 250px; 
+            padding-bottom: 270px; 
         }
         .game-logo {
             font-family: 'Rajdhani', sans-serif;
@@ -183,15 +183,31 @@
         .mode-card i { font-size: 1.8rem; margin-bottom: 8px; color: #fff; }
         .mode-label { font-size: 0.8rem; font-weight: 700; font-family: 'Rajdhani'; letter-spacing: 1px; }
 
+        /* MATCH TYPE TOGGLE */
+        .toggle-wrapper {
+            display: flex; gap: 8px; background: rgba(255,255,255,0.05); 
+            padding: 5px; border-radius: 14px; border: 1px solid var(--border); 
+            margin-bottom: 5px;
+        }
+        .toggle-btn {
+            flex: 1; text-align: center; padding: 12px; border-radius: 10px; 
+            color: var(--text-sub); font-family: 'Rajdhani'; font-weight: 700; 
+            cursor: pointer; transition: 0.3s; font-size: 0.95rem; letter-spacing: 0.5px;
+        }
+        .toggle-btn.active {
+            background: var(--brand); color: white; 
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+        }
+
         .big-btn {
             background: linear-gradient(135deg, var(--brand), #6366f1);
             color: white; border: none; padding: 18px; border-radius: 16px;
             font-size: 1.1rem; font-weight: 700; font-family: 'Rajdhani';
             letter-spacing: 1px; text-transform: uppercase;
             box-shadow: 0 4px 20px rgba(59, 130, 246, 0.4);
-            cursor: pointer; width: 100%; transition: transform 0.1s;
+            cursor: pointer; width: 100%; transition: background 0.3s, box-shadow 0.3s, transform 0.1s;
         }
-        .big-btn:disabled { opacity: 0.6; cursor: not-allowed; filter: grayscale(1); box-shadow: none; }
+        .big-btn:disabled { opacity: 0.6; cursor: not-allowed; filter: grayscale(1); box-shadow: none !important; }
         .big-btn:active:not(:disabled) { transform: scale(0.97); }
 
         .row-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
@@ -312,8 +328,18 @@
                     </div>
                 </div>
                 
-                <!-- PLAY BUTTONS -->
                 <div class="sheet-content">
+                    <!-- MATCH TYPE TOGGLE -->
+                    <div class="toggle-wrapper">
+                        <div id="btnOnline" class="toggle-btn active" onclick="setMatchType('online')">
+                            <i class="fas fa-globe"></i> Real Player
+                        </div>
+                        <div id="btnBot" class="toggle-btn" onclick="setMatchType('bot')">
+                            <i class="fas fa-robot"></i> Bot Match
+                        </div>
+                    </div>
+
+                    <!-- PLAY BUTTONS -->
                     <button id="findMatchBtn" class="big-btn" onclick="findRandomMatch()" disabled>
                         <i class="fas fa-search" style="margin-right:8px"></i> Find Match
                     </button>
@@ -420,6 +446,8 @@
         // STATE
         let currentScreen = 'home-screen';
         let selectedSize = 1;
+        let currentMatchType = 'online'; 
+        
         let currentRoomId = null;
         let roomUnsub = null;
         let myTeam = 'A'; 
@@ -533,16 +561,35 @@
             if (user) cleanGhostSessions(user.uid);
         });
 
+        // --- FIXED RACE CONDITION: CLEAN GHOST SESSIONS ---
         async function cleanGhostSessions(uid) {
             try {
                 const q = query(collection(db, "matches"), where("status", "==", "waiting"));
                 const snap = await getDocs(q);
+                const now = Date.now();
+                
                 snap.forEach(async (d) => {
+                    // FIX 1: Never delete the active room the user is currently looking at
+                    if (currentRoomId && d.id === currentRoomId) return; 
+
                     const data = d.data();
+                    
+                    // FIX 2: Never delete fresh rooms (Prevents background race condition from deleting a room you just created)
+                    let roomAge = 0;
+                    if(data.createdAt && typeof data.createdAt.toMillis === 'function') {
+                        roomAge = now - data.createdAt.toMillis();
+                    }
+                    if (roomAge < 15000) return; 
+
                     if(data.players && data.players[uid]) {
                         const roomRef = doc(db, "matches", d.id);
                         await updateDoc(roomRef, {[`players.${uid}`]: deleteField() });
-                        if(Object.keys(data.players).length <= 1) {
+                        
+                        // FIX 3: Check if ANY REAL players are left. If only Bots remain, delete the room.
+                        const remainingRealPlayers = Object.entries(data.players)
+                            .filter(([id, p]) => id !== uid && !p.isBot).length;
+                            
+                        if(remainingRealPlayers === 0) {
                             await deleteDoc(roomRef);
                         }
                     }
@@ -566,7 +613,7 @@
             if (currentRoomId && currentScreen === 'lobby-screen') window.leaveCurrentRoom();
         });
 
-        // --- NAVIGATION ---
+        // --- NAVIGATION & TOGGLES ---
         history.replaceState({ screen: 'home-screen' }, '', window.location.href);
 
         window.navigateTo = (screenId) => {
@@ -605,11 +652,28 @@
             }
         };
 
-        // --- UI HELPERS ---
+        // UI toggles
         window.selectMode = (size, el) => {
             selectedSize = size;
             document.querySelectorAll('.mode-card').forEach(c => c.classList.remove('active'));
             el.classList.add('active');
+        };
+
+        window.setMatchType = (type) => {
+            currentMatchType = type;
+            document.getElementById('btnOnline').classList.toggle('active', type === 'online');
+            document.getElementById('btnBot').classList.toggle('active', type === 'bot');
+            
+            const btn = document.getElementById('findMatchBtn');
+            if (type === 'bot') {
+                btn.innerHTML = '<i class="fas fa-robot" style="margin-right:8px"></i> Start Bot Match';
+                btn.style.background = 'linear-gradient(135deg, #10b981, #059669)';
+                btn.style.boxShadow = '0 4px 20px rgba(16, 185, 129, 0.4)';
+            } else {
+                btn.innerHTML = '<i class="fas fa-search" style="margin-right:8px"></i> Find Match';
+                btn.style.background = 'linear-gradient(135deg, var(--brand), #6366f1)';
+                btn.style.boxShadow = '0 4px 20px rgba(59, 130, 246, 0.4)';
+            }
         };
 
         window.openJoinModal = () => document.getElementById('joinModal').classList.remove('hidden');
@@ -622,14 +686,12 @@
         };
         window.closeAlert = () => document.getElementById('alertModal').classList.add('hidden');
 
-        // --- FAST MATCHMAKING ---
+        // --- MATCHMAKING ---
         window.findRandomMatch = async () => {
             if(!auth.currentUser) return window.showAlert("Login Required", "Please login to play.");
             cleanGhostSessions(auth.currentUser.uid); 
             
             window.navigateTo('lobby-screen');
-            document.getElementById('lobbyStatus').innerText = "Searching for players...";
-            document.getElementById('lobbyCode').innerText = "SEARCHING";
 
             // Instant Mock UI
             const mockMe = { 
@@ -643,8 +705,19 @@
             document.getElementById('blueCount').innerText = `1/${selectedSize}`;
             document.getElementById('redCount').innerText = `0/${selectedSize}`;
 
+            // Check match type explicitly
+            if (currentMatchType === 'bot') {
+                document.getElementById('lobbyStatus').innerText = "Generating Bots...";
+                document.getElementById('lobbyCode').innerText = "AI MATCH";
+                await createNewRoom(true, true); // true = private, true = isBotMatch
+                return;
+            }
+
+            // Real Player mode
+            document.getElementById('lobbyStatus').innerText = "Searching for real players...";
+            document.getElementById('lobbyCode').innerText = "SEARCHING";
+
             try {
-                // ADDED LIMIT(5) to drastically speed up query and save database reads!
                 const q = query(
                     collection(db, "matches"), 
                     where("status", "==", "waiting"),
@@ -674,7 +747,9 @@
                 }
                 
                 if (currentScreen !== 'lobby-screen') return;
-                if (!joinedRoom) await createNewRoom(false);
+                
+                // If no real room exists, create a fresh public one and Wait for Real Players
+                if (!joinedRoom) await createNewRoom(false, false);
 
             } catch(e) {
                 console.error("Matchmaking error:", e);
@@ -684,16 +759,25 @@
 
         window.createPrivateRoom = async () => {
             if(!auth.currentUser) return window.showAlert("Login Required", "Please login.");
-            await createNewRoom(true);
+            await createNewRoom(true, false); // Create private code, Real players only
         };
 
-        async function createNewRoom(isPrivate) {
+        async function createNewRoom(isPrivate, isBotMatch) {
             const roomCode = Math.floor(100000 + Math.random() * 900000).toString();
-            currentRoomId = roomCode;
+            currentRoomId = roomCode; // Must assign instantly!
             isHost = true;
             myTeam = 'A'; 
-            const me = { uid: auth.currentUser.uid, name: auth.currentUser.displayName || "Host", avatar: "fas fa-user-astronaut", team: 'A', score: 0 };
-            const data = { status: 'waiting', isPrivate: isPrivate, createdAt: serverTimestamp(), config: { size: selectedSize }, players: {[auth.currentUser.uid]: me }, questions: generateQuestions() };
+            const me = { uid: auth.currentUser.uid, name: auth.currentUser.displayName || "Host", avatar: "fas fa-user-astronaut", team: 'A', score: 0, isBot: false };
+            
+            const data = { 
+                status: 'waiting', 
+                isPrivate: isPrivate, 
+                createdAt: serverTimestamp(), 
+                config: { size: selectedSize, botMatch: isBotMatch }, 
+                players: {[auth.currentUser.uid]: me }, 
+                questions: generateQuestions() 
+            };
+            
             enterLobby(roomCode, isPrivate);
             try { await setDoc(doc(db, "matches", roomCode), data); listenToRoom(roomCode); } catch(e) { history.back(); }
         }
@@ -728,7 +812,7 @@
             myTeam = newTeam;
             selectedSize = data.config.size;
 
-            const me = { uid: auth.currentUser.uid, name: auth.currentUser.displayName || "Player", avatar: "fas fa-user", team: newTeam, score: 0 };
+            const me = { uid: auth.currentUser.uid, name: auth.currentUser.displayName || "Player", avatar: "fas fa-user", team: newTeam, score: 0, isBot: false };
             await updateDoc(doc(db, "matches", roomId), {[`players.${auth.currentUser.uid}`]: me });
             enterLobby(roomId, data.isPrivate);
             listenToRoom(roomId);
@@ -736,7 +820,13 @@
 
         function enterLobby(code, isPrivate) {
             if(currentScreen !== 'lobby-screen') window.navigateTo('lobby-screen');
-            document.getElementById('lobbyCode').innerText = isPrivate ? code : "PUBLIC";
+            // Show proper ID text based on match type
+            if (currentMatchType === 'bot') {
+                document.getElementById('lobbyCode').innerText = "AI MATCH";
+            } else {
+                document.getElementById('lobbyCode').innerText = isPrivate ? code : "PUBLIC";
+            }
+            
             if(autoStartTimer) clearTimeout(autoStartTimer);
             autoStartTimer = null;
             isCountDownRunning = false;
@@ -757,7 +847,9 @@
                 const snap = await getDoc(roomRef);
                 if(snap.exists()) {
                     const players = snap.data().players || {};
-                    if(Object.keys(players).length === 0) await deleteDoc(roomRef);
+                    // Check if 0 REAL players remain in the room. If so, destroy the bot ghost room to save memory!
+                    const realPlayersCount = Object.values(players).filter(p => !p.isBot).length;
+                    if(realPlayersCount === 0) await deleteDoc(roomRef);
                 }
             } catch(e) { console.log("Leave error (ignored)"); }
         };
@@ -790,8 +882,7 @@
                     else { startBtn.disabled = true; startBtn.innerText = "WAITING PLAYERS"; }
 
                     // --- AI BOT AUTO-FILL SYSTEM ---
-                    // If no real players join instantly, inject bots so the user doesn't get bored waiting.
-                    if (data.status === 'waiting' && !data.isPrivate && players.length < totalSlots) {
+                    if (data.config && data.config.botMatch && data.status === 'waiting' && players.length < totalSlots) {
                         if (!botInterval) {
                             botInterval = setInterval(async () => {
                                 if (!currentRoomId || currentScreen !== 'lobby-screen') {
@@ -822,10 +913,10 @@
                                             score: 0, 
                                             isBot: true 
                                         };
-                                        await updateDoc(doc(db, "matches", currentRoomId), { [`players.${botId}`]: bot });
+                                        await updateDoc(doc(db, "matches", currentRoomId), {[`players.${botId}`]: bot });
                                     }
                                 } catch(e) {}
-                            }, 2500); // Inject a bot every 2.5 seconds until full
+                            }, 600); // 600ms ultra-fast spawn
                         }
                     } else {
                         if (botInterval) { clearInterval(botInterval); botInterval = null; }
@@ -918,7 +1009,6 @@
                     const updates = {};
                     latestPlayers.forEach(p => {
                         if(p.isBot) {
-                            // Bots randomly answer correctly during the game to keep pressure on the real player
                             if(Math.random() < 0.3) {
                                 updates[`players.${p.uid}.score`] = p.score + 10;
                                 updated = true;
